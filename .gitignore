@@ -33,5 +33,11 @@ docs/
 po/*~
 # RStudio Connect folder
 rsconnect/
+<<<<<<< HEAD
 # MAC
 .DS_Store
+=======
+
+# MAC 
+*.DS_Store
+>>>>>>> 28f2a013d8929dffadbe50e167967bc40805b325
