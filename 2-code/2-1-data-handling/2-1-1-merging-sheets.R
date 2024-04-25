@@ -10,7 +10,6 @@ rm(list=ls())
 
 library(readr)
 library(readxl)
-library(ggplot2)
 library(tidyverse)
 
 library(nlme)
@@ -21,18 +20,39 @@ library(devtools)
 library(httr)
 library(jsonlite)
 library(XML)
-install_github("BEXIS2/rBExIS", subdir = "rBExIS", dependencies=TRUE)
 library(rBExIS)
 load_all("rBExIS")
-check("rBExIS")
 bexis.options("base_url" = "https://mydivdata.idiv.de")
 bexis.get.datasets()
-
-setwd("C:/Users/eb64wupi/Documents/MyDiv/MyDiv-litterfall-project")
+# setwd("C:/Users/eb64wupi/Documents/MyDiv/MyDiv-litterfall-project")
+# .x = "2023-03-litter dry weights.xlsx"
+df.all.wide = 
+  list.files('1-data/1-1-dry-weights') |> 
+  map_df(.f = ~{
+    d = read_excel(paste0("1-data/1-1-dry-weights/",.x)) |>
+      mutate_at(c("Acer pseudoplatanus (g)",	
+                  "Aesculus hippocastanum (g)",
+                  "Betula pendula (g)",	
+                  "Carpinus betulus (g)",
+                  "Fagus sylvatica (g)",	
+                  "Fraxinus excelsior (g)",	
+                  "Prunus avium (g)",	
+                  "Quercus petraea (g)", 
+                  "Sorbus aucuparia (g)",	
+                  "Tilia platyphyllos (g)", 
+                  "Other (g)"), as.numeric) |> 
+      dplyr::rename("trapID" = "Trap ID",
+                    "plotID" = "Plot ID",
+                    "other (g)" = "Other (g)") |>
+      dplyr::select(-c(`Sampling date (YYYY-MM-DD)`)) |> 
+      mutate(month = str_sub(.x, 1, 7))
+  })
 
 #============================  Read the data   =======================================
 
-March23 <- read_excel("C:/Users/eb64wupi/Documents/MyDiv/MyDiv-litterfall-project/1-data/1-1-dry-weights/2023-03-litter dry weights.xlsx")
+
+
+March23 <- read_excel("1-data/1-1-dry-weights/2023-03-litter dry weights.xlsx")
 April23 <- read_excel("C:/Users/eb64wupi/Documents/MyDiv/MyDiv-litterfall-project/1-data/1-1-dry-weights/2023-04-litter dry weights.xlsx")
 May23 <- read_excel("C:/Users/eb64wupi/Documents/MyDiv/MyDiv-litterfall-project/1-data/1-1-dry-weights/2023-05-litter dry weights.xlsx")
 June23 <- read_excel("C:/Users/eb64wupi/Documents/MyDiv/MyDiv-litterfall-project/1-data/1-1-dry-weights/2023-06-litter dry weights.xlsx")
