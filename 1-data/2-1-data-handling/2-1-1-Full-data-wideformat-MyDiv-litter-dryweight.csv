@@ -1,4 +1,4 @@
-"block","plotID","plotName","tree_species_richness","mycorrhizal_type","composition","trapID","Acer pseudoplatanus (g)","Aesculus hippocastanum (g)","Betula pendula (g)","Carpinus betulus (g)","Fagus sylvatica (g)","Fraxinus excelsior (g)","Prunus avium (g)","Quercus petraea (g)","Sorbus aucuparia (g)","Tilia platyphyllos (g)","other (g)","trap_condition","month","div","blk","myc","sr","sr_myc","month1"
+"block","plotID","plotName","tree_species_richness","mycorrhizal_type","composition","trapID","Acer pseudoplatanus","Aesculus hippocastanum","Betula pendula","Carpinus betulus","Fagus sylvatica","Fraxinus excelsior","Prunus avium","Quercus petraea","Sorbus aucuparia","Tilia platyphyllos","contaminants","trap_condition","month","div","blk","myc","sr","sr_myc","month1"
 1,1,"1.AE2",2,"AMF+EMF","Pr|Ti","A",NA,NA,NA,NA,NA,NA,0,NA,NA,0,0,"ok","March","2","1","AM + EM",2,"2_AM + EM","March"
 1,1,"1.AE2",2,"AMF+EMF","Pr|Ti","B",NA,NA,NA,NA,NA,NA,0,NA,NA,0,0.426,"ok","March","2","1","AM + EM",2,"2_AM + EM","March"
 1,1,"1.AE2",2,"AMF+EMF","Pr|Ti","C",NA,NA,NA,NA,NA,NA,0,NA,NA,0,0,"ok","March","2","1","AM + EM",2,"2_AM + EM","March"
