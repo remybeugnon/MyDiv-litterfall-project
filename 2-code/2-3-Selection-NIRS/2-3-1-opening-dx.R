@@ -1,5 +1,5 @@
 rm(list = ls())
-
+set.seed(123)
 #### > 0. PACKAGES AND FUNCTIONS ####
 library(tidyverse)
 library(magrittr)
@@ -101,14 +101,15 @@ df.large =
   pivot_wider(df.1, names_from = wl, values_from = int)
 # Plot all check 
 ggplot(df.1 , 
-       aes(x = 1/wl, y = int, color = sample)) + 
+       aes(x = 1/wl, y = int, color = sample,
+           alpha = .001)) + 
   geom_line() + 
   theme_bw() + 
   theme(legend.position = 'none')
 
 #### > 2. Sample selection #####
 #### >> 2.1 PCA ####
-n.tot = 100
+n.tot = 250
 # PCA measure
 pca.nirs = PCA(df.large[,-1], 
                scale.unit = T,
@@ -160,16 +161,17 @@ wss <- function(k) {
 k.values <- 1:15
 wss_values <- map_dbl(k.values, wss)
 
-# plot(k.values, wss_values,
-#      type="b", pch = 19, frame = FALSE, 
-#      xlab="Number of clusters K",
-#      ylab="Total within-clusters sum of squares")
+plot(k.values, wss_values,
+     type="b", pch = 19, frame = FALSE,
+     xlab="Number of clusters K",
+     ylab="Total within-clusters sum of squares")
 
 
 nb.k.selected = 4
 k.means.nirs = kmeans(pca.ind, nb.k.selected, nstart = 10)
 
-# fviz_cluster(k.means.nirs, geom = "point", data = pca.ind)
+fviz_cluster(k.means.nirs, geom = "point", data = pca.ind) +
+  theme_bw()
 
 cluster.ind = 
   pca.ind |>
