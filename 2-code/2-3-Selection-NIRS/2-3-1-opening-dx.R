@@ -101,7 +101,7 @@ df.large =
   pivot_wider(df.1, names_from = wl, values_from = int)
 # Plot all check 
 ggplot(df.1 , 
-       aes(x = 1/wl, y = int, color = sample,
+       aes(x = wl, y = int, color = sample,
            alpha = .001)) + 
   geom_line() + 
   theme_bw() + 
@@ -109,10 +109,10 @@ ggplot(df.1 ,
 
 #### > 2. Sample selection #####
 #### >> 2.1 PCA ####
-n.tot = 250
+n.tot = 100
 # PCA measure
 pca.nirs = PCA(df.large[,-1], 
-               scale.unit = T,
+               scale.unit = T,ncp = 8, 
                graph = F)
 
 # Eigen values
@@ -124,7 +124,19 @@ fviz_pca_var(pca.nirs, col.var = "black")
 
 fviz_contrib(pca.nirs, choice = "var", axes = 1, top = 100)
 fviz_contrib(pca.nirs, choice = "var", axes = 2, top = 100)
+pca.var = get_pca_var(pca.nirs)
+df = pca.var$contrib |> 
+  data.frame()
+df$id = unlist(rownames(df)) 
 
+df = pivot_longer(df, 1:8, names_to = 'dim', 
+                  values_to = 'loading')
+ggplot(data = df, 
+       aes(x = as.numeric(id), y = loading, color = dim)) + 
+  geom_line()
+
+# Check 4500 - 5500 N 
+# 
 fviz_pca_ind(pca.nirs, 
              # pointsize = "cos2", 
              # pointshape = 21, 
@@ -194,11 +206,11 @@ cluster.2.ind =
            mutate(c.2 = k.sub$cluster |> unname())
        })
 
-# ggplot(data = cluster.2.ind,
-#        aes(x = Dim.1, y = Dim.2,
-#            color = factor(c.2))) + 
-#   geom_point() + 
-#   facet_grid(cols = vars(cluster))
+ggplot(data = cluster.2.ind,
+       aes(x = Dim.1, y = Dim.2,
+           color = factor(c.2))) +
+  geom_point() +
+  facet_grid(cols = vars(cluster))
 
 cluster.2.ind = 
   cluster.2.ind |>
