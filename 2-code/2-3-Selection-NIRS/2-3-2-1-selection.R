@@ -423,6 +423,11 @@ df.100$plot =
   str_split('-') |> 
   map_chr(.f = ~{paste(.x[1],'-',.x[2])})
 
+df.250$plot = 
+  df.250$sample |> 
+  str_split('-') |> 
+  map_chr(.f = ~{paste(.x[1],'-',.x[2])})
+
 df.100$month = 
   df.100$sample |> 
   str_split('-') |> 
@@ -512,3 +517,15 @@ L = list(
 
 l = c(ini, mean(L$dist.m$d),mean(L$dist.s$d),mean(L$dist.p$d))
 
+df.selected = 
+  df.100 |>
+  select(sample) |> 
+  mutate(select.100 = 'Yes') |> 
+  full_join(
+    df.250 |> 
+      select(sample) |>
+      mutate(select.250 = 'Yes'),
+    by = 'sample', 
+  )
+
+writexl::write_xlsx(df.selected, '1-data/1-2-NIRS/df-selected.xlsx')
