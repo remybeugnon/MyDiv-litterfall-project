@@ -121,8 +121,15 @@ df.1.no50 = df.1[!(df.1$plotID == 50),]
 
 
 ggplot(data = df.1, aes(x = as.numeric(month1), y = cs, color = factor(div), fill = factor(div))) + 
-  geom_smooth(alpha=0.2)+
-  geom_jitter(shape = 21, alpha=0.5)+
+  # geom_smooth(alpha=0.2)+
+  geom_jitter(data = df.1, aes(x = as.numeric(month1), y = cs, color = factor(div), fill = factor(div)),
+              shape = 21, alpha=0.5)+
+  geom_line(data = df.1 |> 
+              group_by(month1, div) |>
+              summarise(cs = mean(cs)), 
+            aes(x = as.numeric(month1), 
+                y = cs, color = factor(div), fill = factor(div)),
+              linewidth = 2)+
   labs(y=bquote("Leaf litter dryweight"~(g/m2)), 
        x = "Month")+
   scale_x_continuous(breaks = 1:12,
@@ -197,6 +204,7 @@ ggplot(data = df.1.no50, aes(x = as.numeric(month1), y = cs, color = factor(myc)
         legend.background = element_rect(colour=NA),
         legend.box= NULL,
         legend.box.background = element_rect(color="transparent"))
+
 
 ### tree species richness
 ggplot(data = df.1.no50, aes(x = as.numeric(month1), y = cs, color = factor(div), fill = factor(div))) + 
