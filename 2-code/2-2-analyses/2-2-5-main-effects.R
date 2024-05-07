@@ -115,7 +115,7 @@ ggplot(df.annual.litter,
 
 # 4) Model ####
 mod.total.litterfall =
-  lmerTest::lmer(litter.prod ~ myc * tree_species_richness + 
+  lmerTest::lmer(litter.prod ~ tree_species_richness * myc + 
                    (1|block),
                  data = df.annual.litter)
 

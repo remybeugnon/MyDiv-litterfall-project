@@ -13,15 +13,6 @@ library(readr)
 library(readxl)
 library(tidyverse)
 
-library(devtools)
-library(httr)
-library(jsonlite)
-library(XML)
-library(rBExIS)
-load_all("rBExIS")
-bexis.options("base_url" = "https://mydivdata.idiv.de")
-bexis.get.datasets()
-
 #============================ Dataset ===============================
 
 df.all.wide.info <- read.csv("2-1-1-Full-data-wideformat-MyDiv-litter-dryweight.csv")
@@ -90,6 +81,7 @@ ggplot()+
        x = "Tree species richness")+
   scale_x_continuous(trans='log2',
                      breaks=c(1,2,4))+
+  scale_y_continuous(limits = c(0, 130))+
   scale_fill_manual(values= c("#71b540","#4c8ecb","#febf00"),
                     name = "Mycorrhizal type",
                     guide="none")+ 
@@ -98,20 +90,26 @@ ggplot()+
   geom_text(data = M |> 
               mutate(month1 = month) |> 
               filter(explanatory == 'sr'), 
-            aes(x=2, y=120,
-                label = sign), 
+            aes(x=2, y=130,
+                label = sign,
+                fontface = "bold",
+                hjust = 0), 
             color = 'black') + 
   geom_text(data = M |> 
               mutate(month1 = month) |> 
               filter(explanatory == 'myc'), 
-            aes(x=2, y=110,
-                label = sign), 
+            aes(x=2, y=125,
+                label = sign,
+                fontface = "bold",
+                hjust = 0), 
             color = 'black') + 
   geom_text(data = M |> 
               mutate(month1 = month) |> 
               filter(explanatory == 'sr:myc'), 
-            aes(x=2, y=100,
-                label = sign), 
+            aes(x=2, y=120,
+                label = sign,
+                fontface = "bold",
+                hjust = 0), 
             color = 'black') + 
   theme_bw()+
   theme(strip.background = element_blank(),
@@ -139,20 +137,15 @@ ggplot()+
         legend.box.background = element_rect(color="transparent"))
 
 # 4) Model ####
-# mod.monthly.litterfall =
-#   lmerTest::lmer(litter.prod ~ month1 * sr * myc + 
-#                    (1|block),
-#                  data = df.monthly.litter)
 
 # with correlation structure
-library(nlme)
+#library(nlme)
 mod.monthly.litterfall =
   lme(litter.prod ~ month1 * sr * myc,
       random = ~1|block,
                  data = df.monthly.litter,
                  correlation=corCAR1())
 
-anova(mod.monthly.litterfall)
 # 5) Check the model quality ####
 #library(performance)
 png("3-plots/2-2-6-Check-model-monthly-effects-2024-05-07.png")
@@ -186,10 +179,13 @@ M = map_df( .x = unique(df.monthly.litter$month1),
                         if_else(p.value < 0.01, "**", 
                                 if_else(p.value < 0.05, '*',
                                         if_else(p.value<0.1, '.', 'n.s.')))))
+M
+
 M$sign[M$explanatory == 'sr' & M$month == 'March'] = 
   paste0("sr = ",M$sign[M$explanatory == 'sr' & M$month == 'March'])
 M$sign[M$explanatory == 'myc' & M$month == 'March'] = 
   paste0("myc = ",M$sign[M$explanatory == 'myc' & M$month == 'March'])
 M$sign[M$explanatory == 'sr:myc' & M$month == 'March'] = 
   paste0("sr:myc = ",M$sign[M$explanatory == 'sr:myc' & M$month == 'March'])
+
 ### end ###
