@@ -77,11 +77,14 @@ df.monthly.litter$month1 = factor(df.monthly.litter$month1, levels =
 
 
 # 4) plot monthly effects ####
-ggplot(df.monthly.litter, 
-       aes(x=sr, y=litter.prod, 
-           color = myc, fill = myc))+
-  geom_point(shape =21, size = 1, alpha=0.5)+
-  geom_smooth(method="lm", alpha=0.3)+
+ggplot()+
+  geom_point(data = df.monthly.litter, 
+             aes(x=sr, y=litter.prod, 
+                 color = myc, fill = myc), shape =21, size = 1, alpha=0.5)+
+  geom_smooth(data = df.monthly.litter, 
+              aes(x=sr, y=litter.prod, 
+                  color = myc, fill = myc),
+              method="lm", alpha=0.3)+
   facet_grid(.~month1)+
   labs(y=bquote("Leaf litter dryweight"~(g/m2)), 
        x = "Tree species richness")+
@@ -92,6 +95,24 @@ ggplot(df.monthly.litter,
                     guide="none")+ 
   scale_color_manual(values = c("#71b540","#4c8ecb","#febf00"), 
                      name = "Mycorrhizal type")+
+  geom_text(data = M |> 
+              mutate(month1 = month) |> 
+              filter(explanatory == 'sr'), 
+            aes(x=2, y=120,
+                label = sign), 
+            color = 'black') + 
+  geom_text(data = M |> 
+              mutate(month1 = month) |> 
+              filter(explanatory == 'myc'), 
+            aes(x=2, y=110,
+                label = sign), 
+            color = 'black') + 
+  geom_text(data = M |> 
+              mutate(month1 = month) |> 
+              filter(explanatory == 'sr:myc'), 
+            aes(x=2, y=100,
+                label = sign), 
+            color = 'black') + 
   theme_bw()+
   theme(strip.background = element_blank(),
         strip.text = element_text(size=12),
@@ -118,12 +139,13 @@ ggplot(df.monthly.litter,
         legend.box.background = element_rect(color="transparent"))
 
 # 4) Model ####
-mod.monthly.litterfall =
-  lmerTest::lmer(litter.prod ~ month1 * sr * myc + 
-                   (1|block),
-                 data = df.monthly.litter)
+# mod.monthly.litterfall =
+#   lmerTest::lmer(litter.prod ~ month1 * sr * myc + 
+#                    (1|block),
+#                  data = df.monthly.litter)
 
 # with correlation structure
+library(nlme)
 mod.monthly.litterfall =
   lme(litter.prod ~ month1 * sr * myc,
       random = ~1|block,
@@ -144,14 +166,30 @@ summary(mod.monthly.litterfall)
 anova(mod.monthly.litterfall)
 
 # 8) Check months individually
-M = map( .x = unique(df.monthly.litter$month1),
+M = map_df( .x = unique(df.monthly.litter$month1),
      .f = ~ {
        mod = 
          lme(litter.prod ~ sr * myc, 
              random= ~1|block,
               data= df.monthly.litter |>
-                filter(month1 == .x))}) |>
-  map(.f = ~anova(.x))
-M[[2]]|>data.frame()
-
+                filter(month1 == .x)) |> 
+         anova() |> 
+         data.frame() |> 
+         mutate(month = .x)
+       mod$exp = rownames(mod)
+       rownames(mod) <- NULL
+       mod |> 
+         select(month, explanatory = exp, 
+                numDF, denDF, F.value, p.value)
+       }) |> 
+  mutate(sign = if_else(p.value < 0.001, '***', 
+                        if_else(p.value < 0.01, "**", 
+                                if_else(p.value < 0.05, '*',
+                                        if_else(p.value<0.1, '.', 'n.s.')))))
+M$sign[M$explanatory == 'sr' & M$month == 'March'] = 
+  paste0("sr = ",M$sign[M$explanatory == 'sr' & M$month == 'March'])
+M$sign[M$explanatory == 'myc' & M$month == 'March'] = 
+  paste0("myc = ",M$sign[M$explanatory == 'myc' & M$month == 'March'])
+M$sign[M$explanatory == 'sr:myc' & M$month == 'March'] = 
+  paste0("sr:myc = ",M$sign[M$explanatory == 'sr:myc' & M$month == 'March'])
 ### end ###
