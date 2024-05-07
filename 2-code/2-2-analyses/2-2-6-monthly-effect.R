@@ -1,7 +1,7 @@
 #---------------------------------------------------------------------
 # MyDiv experiment; Litterfall data March 2023 - February 2024
-# 2024-04-26
-# sd across plots (lm ~ 1) --> estimate the integer
+# 2024-04-30
+# monthly effects 
 # by Elisabeth Bönisch (elisabeth.boenisch@idiv.de)
 # updated on 
 
@@ -52,6 +52,14 @@ df.all.wide.mean <- df.all.wide.info %>%
                    Ti_mean = mean(Ti, na.rm = TRUE), 
                    cont_mean = mean(cont, na.rm = TRUE))
 
+df.all.wide.mean$div<-as.factor(df.all.wide.mean$tree_species_richness)
+df.all.wide.mean$blk<-as.factor(df.all.wide.mean$block)
+df.all.wide.mean$myc<-as.factor(df.all.wide.mean$mycorrhizal_type)
+df.all.wide.mean$sr<-df.all.wide.mean$tree_species_richness
+df.all.wide.mean$sr_myc<-paste(df.all.wide.mean$sr,df.all.wide.mean$myc,sep="_")#interaction terms
+df.all.wide.mean$myc <- recode_factor(df.all.wide.mean$myc, "AMF" ="AM", "EMF" ="EM", "AMF+EMF" = "AM + EM")
+
+
 # 2) long format ####
 df.all.long <- df.all.wide.mean %>% 
   pivot_longer(cols=c(13:22),
@@ -61,7 +69,7 @@ df.all.long <- df.all.wide.mean %>%
 
 # 3) monthly effect - sum per plot and month ####
 df.monthly.litter = df.all.long |> 
-  group_by(block, plotID, div, myc, month1) |> 
+  group_by(block, plotID, sr, div, myc, month1) |> 
   summarise(litter.prod = sum(dryweight, na.rm = T))
 
 df.monthly.litter$month1 = factor(df.monthly.litter$month1, levels = 
@@ -70,8 +78,8 @@ df.monthly.litter$month1 = factor(df.monthly.litter$month1, levels =
 
 # 4) plot monthly effects ####
 ggplot(df.monthly.litter, 
-       aes(x=div, y=litter.prod, 
-           color = myc, fill = myc))
+       aes(x=sr, y=litter.prod, 
+           color = myc, fill = myc))+
   geom_point(shape =21, size = 1, alpha=0.5)+
   geom_smooth(method="lm", alpha=0.3)+
   facet_grid(.~month1)+
@@ -110,148 +118,40 @@ ggplot(df.monthly.litter,
         legend.box.background = element_rect(color="transparent"))
 
 # 4) Model ####
-mod.total.litterfall =
-  lmerTest::lmer(litter.prod ~ myc * tree_species_richness + 
+mod.monthly.litterfall =
+  lmerTest::lmer(litter.prod ~ month1 * sr * myc + 
                    (1|block),
-                 data = df.annual.litter)
+                 data = df.monthly.litter)
+
+mod.monthly.litterfall =
+  lmerTest::lmer(litter.prod ~ month1 * sr * myc + 
+                   (1|block),
+                 data = df.monthly.litter,
+                 correlation=corAR1(form=~1|month1))
 
 
+# 5) Check the model quality ####
+#library(performance)
+png("3-plots/2-2-6-Check-model-monthly-effects-2024-05-07.png")
+performance::check_model(mod.monthly.litterfall)
+dev.off()
 
+# 6) Summary ####
+summary(mod.monthly.litterfall)
 
+# 7) Anova (Type III SS) ####
+anova(mod.monthly.litterfall)
 
-df.1 = 
-  df |> 
-  group_by(block, plotID, div, myc) |> 
-  arrange(month1) |> 
-  mutate(cs = cumsum(litter.prod))
+# 8) Check months individually
 
-df2 = df.all.long |> 
-  group_by(block, plotID, div, myc) |> 
-  summarise(litterfall_sd = sd(dryweight, na.rm=T),
-            litterfall_mean = mean(dryweight,na.rm=T))
+tidyverse::map( .x = 1 : 12
+                .f = ~ {
+                 litter.prod ~ sr * myc + 1|block,
+                 df= df.monthly.litter) |>
+  filter(month == .x) |>
+  anova(mod)}
+               list [[x = 1]] = anova
+               
+               map_df
 
-
-
-
-## test - estimate Intercept
-mod1 <- lm(litterfall_sd ~ 1, data=df2)
-summary(mod1)
-
-
-
-# tree species richness
-ggplot(data = df2, aes(x = plotID, y = litterfall_mean, color = factor(div), fill = factor(div))) + 
-  geom_bar(position=position_dodge(), 
-           stat="identity", 
-           colour='black') + 
-  geom_errorbar(aes(ymin=litterfall_mean-litterfall_sd, ymax=litterfall_mean+litterfall_sd), width=.2)+
-  # scale_x_discrete(breaks = 1:80,
-  #                  labels = c(1:80)
-  #                  )+
-  scale_fill_manual(values= c("#335C67","#E09F3E","#f68080"),
-                    guide="none")+ 
-  scale_color_manual(values= c("#335C67","#E09F3E","#f68080"), 
-                     name = "Tree species richness")+
-  theme_bw()+
-  theme(strip.background = element_blank(),
-        strip.text = element_text(size=12),
-        axis.line = element_line(color='black'),
-        axis.text.y = element_text(color="black", size = 12),
-        axis.text.x = element_text(color="black", size = 12),
-        axis.title.y = element_text(size = 12),
-        axis.title.x = element_text(size=12),
-        axis.ticks.x = element_line(),
-        strip.text.x = element_text(12),
-        panel.border = element_rect(colour="black", fill=NA),
-        plot.background = element_blank(),
-        #plot.margin = margin(0, 0, 0, 0, "pt"),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
-        plot.title = element_text(size =12),
-        plot.subtitle = element_text(size=12),
-        legend.position = "right",
-        legend.direction = "vertical",
-        legend.key = element_rect(color="transparent"),   
-        legend.title = element_text("Biodiversity effects", size = 12),
-        legend.text = element_text(size=12),
-        legend.background = element_rect(colour=NA),
-        legend.box= NULL,
-        legend.box.background = element_rect(color="transparent"))
-
-# mycorrhizal type
-ggplot(data = df2, aes(x = plotID, y = litterfall_mean, color = factor(myc), fill = factor(myc))) + 
-  geom_bar(position=position_dodge(), 
-           stat="identity", 
-           colour='black') + 
-  geom_errorbar(aes(ymin=litterfall_mean-litterfall_sd, ymax=litterfall_mean+litterfall_sd), width=.2)+
-  # scale_x_discrete(breaks = 1:80,
-  #                  labels = c(1:80)
-  #                  )+
-  scale_fill_manual(values= c("#71b540","#febf00","#4c8ecb"),
-                    name = "Mycorrhizal type")+ 
-  scale_color_manual(values = c("#71b540","#febf00","#4c8ecb"),
-                     guide ="none")+
-  theme_bw()+
-  theme(strip.background = element_blank(),
-        strip.text = element_text(size=12),
-        axis.line = element_line(color='black'),
-        axis.text.y = element_text(color="black", size = 12),
-        axis.text.x = element_text(color="black", size = 12),
-        axis.title.y = element_text(size = 12),
-        axis.title.x = element_text(size=12),
-        axis.ticks.x = element_line(),
-        strip.text.x = element_text(12),
-        panel.border = element_rect(colour="black", fill=NA),
-        plot.background = element_blank(),
-        #plot.margin = margin(0, 0, 0, 0, "pt"),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
-        plot.title = element_text(size =12),
-        plot.subtitle = element_text(size=12),
-        legend.position = "right",
-        legend.direction = "vertical",
-        legend.key = element_rect(color="transparent"),   
-        legend.title = element_text("Biodiversity effects", size = 12),
-        legend.text = element_text(size=12),
-        legend.background = element_rect(colour=NA),
-        legend.box= NULL,
-        legend.box.background = element_rect(color="transparent"))
-
-# tree species richness
-  ggplot(data = df.1, aes(x = plotID, y = litterfall, color = factor(div), fill = factor(div))) + 
-    geom_bar(position=position_dodge(), 
-             stat="identity", 
-             colour='black') +
-    facet_grid(.~as.numeric(month1))+
-    labs(y=bquote("Leaf litter dryweight"~(g/m2)), 
-         x = "Month")+
-    scale_fill_manual(values= c("#335C67","#E09F3E","#f68080"),
-                      guide="none")+ 
-    scale_color_manual(values= c("#335C67","#E09F3E","#f68080"), 
-                       name = "Tree species richness")+
-    theme_bw()+
-    theme(strip.background = element_blank(),
-          strip.text = element_text(size=12),
-          axis.line = element_line(color='black'),
-          axis.text.y = element_text(color="black", size = 12),
-          axis.text.x = element_text(color="black", size = 12),
-          axis.title.y = element_text(size = 12),
-          axis.title.x = element_text(size=12),
-          axis.ticks.x = element_line(),
-          strip.text.x = element_text(12),
-          panel.border = element_rect(colour="black", fill=NA),
-          plot.background = element_blank(),
-          #plot.margin = margin(0, 0, 0, 0, "pt"),
-          panel.grid.minor = element_blank(),
-          panel.grid.major = element_blank(),
-          plot.title = element_text(size =12),
-          plot.subtitle = element_text(size=12),
-          legend.position = "right",
-          legend.direction = "vertical",
-          legend.key = element_rect(color="transparent"),   
-          legend.title = element_text("Biodiversity effects", size = 12),
-          legend.text = element_text(size=12),
-          legend.background = element_rect(colour=NA),
-          legend.box= NULL,
-          legend.box.background = element_rect(color="transparent"))
-  
+### end ###
