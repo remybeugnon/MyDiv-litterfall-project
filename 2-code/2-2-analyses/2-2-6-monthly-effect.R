@@ -125,12 +125,12 @@ mod.monthly.litterfall =
 
 # with correlation structure
 mod.monthly.litterfall =
-  lmerTest::lmer(litter.prod ~ month1 * sr * myc + 
-                   (1|block),
+  lme(litter.prod ~ month1 * sr * myc,
+      random = ~1|block,
                  data = df.monthly.litter,
-                 correlation=corAR1(form=~1|month1))
+                 correlation=corCAR1())
 
-
+anova(mod.monthly.litterfall)
 # 5) Check the model quality ####
 #library(performance)
 png("3-plots/2-2-6-Check-model-monthly-effects-2024-05-07.png")
@@ -144,15 +144,14 @@ summary(mod.monthly.litterfall)
 anova(mod.monthly.litterfall)
 
 # 8) Check months individually
-
-tidyverse::map( .x = 1 : 12
-                .f = ~ {
-                 litter.prod ~ sr * myc + 1|block,
-                 df= df.monthly.litter) |>
-  filter(month == .x) |>
-  anova(mod)}
-               list [[x = 1]] = anova
-               
-               map_df
+M = map( .x = unique(df.monthly.litter$month1),
+     .f = ~ {
+       mod = 
+         lme(litter.prod ~ sr * myc, 
+             random= ~1|block,
+              data= df.monthly.litter |>
+                filter(month1 == .x))}) |>
+  map(.f = ~anova(.x))
+M[[2]]|>data.frame()
 
 ### end ###
