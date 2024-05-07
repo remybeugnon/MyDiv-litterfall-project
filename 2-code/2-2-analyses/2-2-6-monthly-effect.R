@@ -123,6 +123,7 @@ mod.monthly.litterfall =
                    (1|block),
                  data = df.monthly.litter)
 
+# with correlation structure
 mod.monthly.litterfall =
   lmerTest::lmer(litter.prod ~ month1 * sr * myc + 
                    (1|block),
