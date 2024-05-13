@@ -12,6 +12,10 @@ rm(list=ls())
 library(readr)
 library(readxl)
 library(tidyverse)
+library(nlme)
+library(lme4)
+library(lmerTest)
+
 
 #============================ Dataset ===============================
 
@@ -68,7 +72,7 @@ df.monthly.litter$month1 = factor(df.monthly.litter$month1, levels =
 
 
 # 4) plot monthly effects ####
-ggplot()+
+fig.month <- ggplot()+
   geom_point(data = df.monthly.litter, 
              aes(x=sr, y=litter.prod, 
                  color = myc, fill = myc), shape =21, size = 1, alpha=0.5)+
@@ -81,7 +85,7 @@ ggplot()+
        x = "Tree species richness")+
   scale_x_continuous(trans='log2',
                      breaks=c(1,2,4))+
-  scale_y_continuous(limits = c(0, 130))+
+  scale_y_continuous(limits = c(0, 140))+
   scale_fill_manual(values= c("#71b540","#4c8ecb","#febf00"),
                     name = "Mycorrhizal type",
                     guide="none")+ 
@@ -90,7 +94,7 @@ ggplot()+
   geom_text(data = M |> 
               mutate(month1 = month) |> 
               filter(explanatory == 'sr'), 
-            aes(x=2, y=130,
+            aes(x=1, y=135,
                 label = sign,
                 fontface = "bold",
                 hjust = 0), 
@@ -98,7 +102,7 @@ ggplot()+
   geom_text(data = M |> 
               mutate(month1 = month) |> 
               filter(explanatory == 'myc'), 
-            aes(x=2, y=125,
+            aes(x=1, y=130,
                 label = sign,
                 fontface = "bold",
                 hjust = 0), 
@@ -106,7 +110,7 @@ ggplot()+
   geom_text(data = M |> 
               mutate(month1 = month) |> 
               filter(explanatory == 'sr:myc'), 
-            aes(x=2, y=120,
+            aes(x=1, y=125,
                 label = sign,
                 fontface = "bold",
                 hjust = 0), 
@@ -127,14 +131,29 @@ ggplot()+
         panel.grid.major = element_blank(),
         plot.title = element_text(size =12),
         plot.subtitle = element_text(size=12),
-        legend.position = "right",
-        legend.direction = "vertical",
+        legend.position = "bottom",
+        legend.direction = "horizontal",
         legend.key = element_rect(color="transparent"),   
         legend.title = element_text("Biodiversity effects", size = 12),
         legend.text = element_text(size=12),
         legend.background = element_rect(colour=NA),
         legend.box= NULL,
         legend.box.background = element_rect(color="transparent"))
+
+ggsave("3-plots/2-2-4-Figure-monthly-effects-sig-2024-05-07.jpeg", 
+       fig.month, 
+       height=20,
+       width=28, 
+       unit="cm", 
+       dpi=2000) 
+
+ggsave("3-plots/2-2-4-Figure-monthly-effects-sig-2024-05-07.pdf", 
+       fig.month,
+       device = cairo_pdf,
+       height=20,
+       width=28, 
+       unit="cm", 
+       dpi=2000) 
 
 # 4) Model ####
 
@@ -148,7 +167,8 @@ mod.monthly.litterfall =
 
 # 5) Check the model quality ####
 #library(performance)
-png("3-plots/2-2-6-Check-model-monthly-effects-2024-05-07.png")
+png("3-plots/2-2-6-Check-model-monthly-effects-2024-05-07.png", 
+    width=1000, height=1000)
 performance::check_model(mod.monthly.litterfall)
 dev.off()
 
