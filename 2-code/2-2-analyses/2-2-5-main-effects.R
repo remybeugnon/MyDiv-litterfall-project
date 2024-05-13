@@ -132,7 +132,4 @@ summary(mod.total.litterfall)
 
 # /) Anova (Type III SS) ####
 anova(mod.total.litterfall)
-
-
 ### end ###
-

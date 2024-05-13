@@ -201,11 +201,27 @@ dpi=2000)
 
 
 # 5) temporal variability - sd of total litterfall   ####
+#  Yearly spatial stability
 df.2 = df.1 |>
   group_by(block, sr, div, myc, plotID, month1) |> 
-  summarise(litterfall_sd = sd(litterfall_sum, na.rm=T))|>
+  summarise(litterfall_sd = mean(litterfall_sum, na.rm=T)/sd(litterfall_sum, na.rm=T))|>
+  mutate(month1 = factor(month1, levels = c(month.name[3:12], month.name[1:2]))) |>
+  group_by(block, sr, div, myc, plotID) |> 
+  summarise(litterfall_sd = mean(litterfall_sd, na.rm=T))
+
+#  Monthly spatial stability
+df.2 = df.1 |>
+  group_by(block, sr, div, myc, plotID, month1) |> 
+  summarise(litterfall_sd = mean(litterfall_sum, na.rm=T)/sd(litterfall_sum, na.rm=T))|>
   mutate(month1 = factor(month1, levels = c(month.name[3:12], month.name[1:2])))
 
+# Yearly temporal stability 
+df.2 = df.1 |>
+  group_by(block, sr, div, myc, plotID, month1) |> 
+  summarise(litterfall_mean = mean(litterfall_sum, na.rm=T))|>
+  mutate(month1 = factor(month1, levels = c(month.name[3:12], month.name[1:2]))) |>
+  group_by(block, sr, div, myc, plotID) |> 
+  summarise(litterfall_sd = mean(litterfall_mean, na.rm=T)/sd(litterfall_mean, na.rm=T))
 
 # 6) plot of temporal variability - sd of total litterfall ####
 
