@@ -56,7 +56,17 @@ df.1 = df.all.long |>
   summarise(litterfall_sum = sum(dryweight, na.rm = TRUE)) |>
   mutate(month1 = factor(month1, levels = c(month.name[3:12], month.name[1:2])))
 
-# 4) plot of total litter per trap ####
+df.2 = df.1 |>
+  group_by(block, sr, div, myc, plotID, month1) |> 
+  summarise(litterfall_sd = sd(litterfall_sum, na.rm=T))
+
+df.3 = df.2 |>
+  group_by(block, sr, div, myc, plotID) |>
+  summarise(mean_sd = )
+
+
+
+# 4) plot ####
 
 total.tr <- ggplot(df.1, 
                    aes(x=sr, y=litterfall_sum, 
