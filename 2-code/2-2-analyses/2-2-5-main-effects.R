@@ -76,7 +76,7 @@ df.annual.litter =
   summarise(litter.prod = sum(dryweight, na.rm = T), 
             sd.litter.prod = sd(dryweight, na.rm = T))
 
-ggplot(df.annual.litter, 
+main.eff <- ggplot(df.annual.litter, 
        aes(x=tree_species_richness, y=litter.prod, 
            color = myc, fill = myc))+
   geom_point(shape =21, size = 1, alpha=0.5)+
@@ -114,6 +114,22 @@ ggplot(df.annual.litter,
         legend.background = element_rect(colour=NA),
         legend.box= NULL,
         legend.box.background = element_rect(color="transparent"))
+main.eff
+
+ggsave("3-plots/2-2-5-Figure-yearly-effect-2024-05-07.jpeg", 
+       main.eff, 
+       height=16,
+       width=20, 
+       unit="cm", 
+       dpi=2000) 
+
+ggsave("3-plots/2-2-5-Figure-yearly-effect-sig-2024-05-07.pdf", 
+       main.eff,
+       device = cairo_pdf,
+       height=16,
+       width=20, 
+       unit="cm", 
+       dpi=2000) 
 
 # 4) Model ####
 mod.total.litterfall =
@@ -132,4 +148,5 @@ summary(mod.total.litterfall)
 
 # /) Anova (Type III SS) ####
 anova(mod.total.litterfall)
+
 ### end ###

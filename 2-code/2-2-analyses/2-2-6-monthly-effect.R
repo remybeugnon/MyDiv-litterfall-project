@@ -142,16 +142,16 @@ fig.month <- ggplot()+
 
 ggsave("3-plots/2-2-4-Figure-monthly-effects-sig-2024-05-07.jpeg", 
        fig.month, 
-       height=20,
-       width=28, 
+       height=16,
+       width=34, 
        unit="cm", 
        dpi=2000) 
 
 ggsave("3-plots/2-2-4-Figure-monthly-effects-sig-2024-05-07.pdf", 
        fig.month,
        device = cairo_pdf,
-       height=20,
-       width=28, 
+       height=16,
+       width=34, 
        unit="cm", 
        dpi=2000) 
 

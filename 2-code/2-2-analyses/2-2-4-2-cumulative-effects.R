@@ -114,14 +114,14 @@ cum_smooth <- ggplot(data =df.cum.litter.1, aes(x = as.numeric(month1), y = cs, 
         legend.box= NULL,
         legend.box.background = element_rect(color="transparent"))
 
-ggsave("3-plots/2-2-4-Figure-cumulative-sum-smooth-sig-2024-05-07.jpeg", 
+#ggsave("3-plots/2-2-4-Figure-cumulative-sum-smooth-sig-2024-05-07.jpeg", 
        cum_smooth, 
        height=20,
        width=28, 
        unit="cm", 
        dpi=2000) 
 
-ggsave("3-plots/2-2-4-Figure-cumulative-sum-smooth-sig-2024-05-07.pdf", 
+#ggsave("3-plots/2-2-4-Figure-cumulative-sum-smooth-sig-2024-05-07.pdf", 
        cum_smooth,
        device = cairo_pdf,
        height=20,
@@ -198,19 +198,20 @@ cum_facet<- ggplot()+
         legend.background = element_rect(colour=NA),
         legend.box= NULL,
         legend.box.background = element_rect(color="transparent"))
+cum_facet
 
-ggsave("3-plots/2-2-4-Figure-cumulative-sum-monthly-sig-2024-05-07.jpeg", 
+ggsave("3-plots/2-2-4-2-Figure-cumulative-sum-monthly-sig-2024-05-07.jpeg", 
        cum_facet, 
-       height=20,
-       width=28, 
+       height=16,
+       width=34, 
        unit="cm", 
        dpi=2000) 
 
-ggsave("3-plots/2-2-4-Figure-cumulative-sum-monthly-sig-2024-05-07.pdf", 
+ggsave("3-plots/2-2-4-2-Figure-cumulative-sum-monthly-sig-2024-05-07.pdf", 
        cum_facet,
        device = cairo_pdf,
-       height=20,
-       width=28, 
+       height=16,
+       width=34, 
        unit="cm", 
        dpi=2000) 
 
@@ -226,7 +227,7 @@ mod.cum.litter =
 
 # 6) Check the model quality ####
 #library(performance)
-png("3-plots/2-2-4-Check-model-cumulative-sum-effects-2024-05-07.png", 
+png("3-plots/2-2-4-2-Check-model-cumulative-sum-effects-2024-05-07.png", 
     width=1000, height=1000)
 performance::check_model(mod.cum.litter)
 dev.off()
@@ -343,20 +344,20 @@ cum_facet_no50<- ggplot()+
         legend.background = element_rect(colour=NA),
         legend.box= NULL,
         legend.box.background = element_rect(color="transparent"))
+cum_facet_no50
 
-
-ggsave("3-plots/2-2-4-Figure-cumulative-sum-monthly-sig-noplot50-2024-05-07.jpeg", 
+ggsave("3-plots/2-2-4-2-Figure-cumulative-sum-monthly-sig-noplot50-2024-05-07.jpeg", 
        cum_facet_no50, 
-       height=20,
-       width=28, 
+       height=16,
+       width=34, 
        unit="cm", 
        dpi=2000) 
 
-ggsave("3-plots/2-2-4-Figure-cumulative-sum-monthly-sig-noplot50-2024-05-07.pdf", 
+ggsave("3-plots/2-2-4-2-Figure-cumulative-sum-monthly-sig-noplot50-2024-05-07.pdf", 
        cum_facet_no50,
        device = cairo_pdf,
-       height=20,
-       width=28, 
+       height=16,
+       width=34, 
        unit="cm", 
        dpi=2000) 
 
@@ -372,7 +373,7 @@ mod.cum.litter.no50 =
 
 # 6.2) Check the model quality ####
 #library(performance)
-png("3-plots/2-2-4-Check-model-cumulative-sum-effects_noplot50-2024-05-07.png", 
+png("3-plots/2-2-4-2-Check-model-cumulative-sum-effects_noplot50-2024-05-07.png", 
     width=1000, height=1000)
 performance::check_model(mod.cum.litter.no50)
 dev.off()
