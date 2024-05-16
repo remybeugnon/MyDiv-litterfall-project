@@ -1,7 +1,7 @@
 #---------------------------------------------------------------------
 # MyDiv experiment; Litterfall data March 2023 - February 2024
 # 2024-05-14
-# litter dryweight NMDS on species level
+# litter dryweight NMDS on species level over time
 # by Elisabeth Bönisch (elisabeth.boenisch@idiv.de)
 # updated on 
 
@@ -55,8 +55,46 @@ df.all.wide.mean$sr_myc<-paste(df.all.wide.mean$sr,df.all.wide.mean$myc,sep="_")
 df.all.wide.mean$myc <- recode_factor(df.all.wide.mean$myc, "AMF" ="AM", "EMF" ="EM", "AMF+EMF" = "AM + EM")
 
 
-# 2) long format ####
-df.all.long <- df.all.wide.mean %>% 
-  pivot_longer(cols=c(13:22),
-               names_to="species",
-               values_to="dryweight")
+
+
+# 2) plot by species matrix ####
+# To run an ordination you will need a data-frame consisting of plot by species (or trait) matrix 
+
+plot.by.species <- df.all.wide.mean |>
+  dplyr::group_by(plotID, plotName, tree_species_richness, mycorrhizal_type, myc, sr, div, block, blk, month1, month, composition, Ac_mean, Ae_mean, Be_mean, Ca_mean, Fa_mean, Fr_mean, Pr_mean, Qu_mean, So_mean, Ti_mean) |>
+  ungroup()|>
+  dplyr::select(c("Ac_mean":"Ti_mean"))
+
+# 3) groups dataframe ####
+# AND a “groups” data-frame which should consist of plots with a coding variable for what group each plot belongs to, 
+# this will be used for plotting the ordination.
+
+plot.info <- df.all.wide.mean |>
+  dplyr::group_by(plotID, plotName, tree_species_richness, mycorrhizal_type, myc, sr, div, block, blk, month1, month, composition, Ac_mean, Ae_mean, Be_mean, Ca_mean, Fa_mean, Fr_mean, Pr_mean, Qu_mean, So_mean, Ti_mean) |>
+  ungroup()|>
+  dplyr::select(c("plotID":"composition"))
+
+# 4) Converting Absolute Abundance to Relative Abundance ####
+
+tree.species.rel <-         
+  decostand(plot.by.species, method = "total", na.rm = T)
+
+# 5) Calculating your distance matrix ####
+
+tree.species.distmat <- 
+  vegdist(plot.species.rel, method = "bray", na.rm = T)    # zero values are problem
+
+# 6) Creating easy to view matrix and writing .csv ####
+tree.species.distmat <- 
+  as.matrix(tree.species.distmat, labels = T)
+write.csv(tree.species.distmat, "1-data/2-2-9-NDMS-tree-species-distance-matrix.csv")
+
+
+# 7) Running NMDS in vegan (metaMDS) ####                  # zero values & NAs are problem
+tree.species_NMS <-
+  metaMDS(tree.species.distmat,
+          distance = "bray",
+          k = 3,
+          maxit = 999, 
+          trymax = 500,
+          wascores = TRUE)
