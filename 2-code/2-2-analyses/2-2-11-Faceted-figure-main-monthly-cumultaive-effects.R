@@ -87,8 +87,8 @@ main.eff <- ggplot(df.annual.litter,
         panel.grid.major = element_blank(),
         plot.title = element_text(size =12),
         plot.subtitle = element_text(size=12),
-        legend.position = "right",
-        legend.direction = "vertical",
+        legend.position = "top",
+        legend.direction = "horizontal",
         legend.key = element_rect(color="transparent"),   
         legend.title = element_text("Biodiversity effects", size = 12),
         legend.text = element_text(size=12),
@@ -352,9 +352,17 @@ Mc$sign[Mc$explanatory == 'sr:myc' & Mc$month == 'March'] =
 
 
 library(gridExtra)
-plot1 <-grid.arrange(layout_matrix = rbind(c(1,1,NA),
-                                           c(2,2,2),
-                                           c(3,3,3)),
+library(ggpubr)
+
+ggarrange(
+  main.eff,
+  ggarrange(fig.month, cum_facet, ncol = 1),
+  nrow = 1, ncol = 2, 
+  widths = c(.3,.6)
+)
+
+plot1 <-grid.arrange(layout_matrix = rbind(c(1,2),
+                                           c(1,3)),
                              grobs= list(main.eff, fig.month, cum_facet))
 
 plot1
@@ -373,3 +381,4 @@ ggsave("3-plots/2-2-11-Figure-total-monthly-cumulative-2024-05-21.pdf",
        width=34,
        unit="cm",
        dpi=2000)
+
