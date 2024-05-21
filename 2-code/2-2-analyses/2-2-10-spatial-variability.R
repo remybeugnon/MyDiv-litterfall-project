@@ -80,7 +80,8 @@ spa.stab.yearly <- ggplot()+
                     name = "Mycorrhizal type",
                     guide="none")+ 
   scale_color_manual(values = c("#71b540","#4c8ecb","#febf00"), 
-                     name = "Mycorrhizal type")+
+                     name = "Mycorrhizal type",
+                     guide="none")+
   theme_bw()+
   theme(strip.background = element_blank(),
         strip.text = element_text(size=12),
@@ -104,10 +105,11 @@ spa.stab.yearly <- ggplot()+
         legend.text = element_text(size=12),
         legend.background = element_rect(colour=NA),
         legend.box= NULL,
-        legend.box.background = element_rect(color="transparent"))
+        legend.box.background = element_rect(color="transparent"))+
+  labs(tag = "(b)")
 spa.stab.yearly
 
-ggsave("3-plots/2-2-10-Figure-litterfalll-spatial-variability-yearly-2024-05-13.jpeg", 
+#ggsave("3-plots/2-2-10-Figure-litterfalll-spatial-variability-yearly-2024-05-13.jpeg", 
        spa.stab.yearly, 
        height=16,
        width=20, 
@@ -195,7 +197,7 @@ anova(mod.yearly.stab.spat)
 df.month.spat = df.all.long |>
   group_by(block, sr, div, myc, plotID, month1) |> 
   summarise(litterfall_sd = mean(litterfall, na.rm=T)/sd(litterfall, na.rm=T))|>
-  mutate(month1 = factor(month1, levels = c(month.name[3:12], month.name[1:2])))
+  mutate(month1 = factor(month1, levels = c(month.name[3:12], month.name[1:2]),labels=month.abb))
 
 # 4.2) Plot: Monthly spatial stability ####
 spa.stab.monthly <- ggplot()+
@@ -222,7 +224,6 @@ spa.stab.monthly <- ggplot()+
               filter(explanatory == 'sr'),
             aes(x=1, y=20,
                 label = sign,
-                fontface = "bold",
                 hjust = 0),
             color = 'black') +
   geom_text(data = M |>
@@ -230,7 +231,6 @@ spa.stab.monthly <- ggplot()+
               filter(explanatory == 'myc'),
             aes(x=1, y=15,
                 label = sign,
-                fontface = "bold",
                 hjust = 0),
             color = 'black') +
   geom_text(data = M |>
@@ -238,7 +238,6 @@ spa.stab.monthly <- ggplot()+
               filter(explanatory == 'sr:myc'),
             aes(x=1, y=10,
                 label = sign,
-                fontface = "bold",
                 hjust = 0),
             color = 'black') +
   theme_bw()+
@@ -264,11 +263,12 @@ spa.stab.monthly <- ggplot()+
         legend.text = element_text(size=12),
         legend.background = element_rect(colour=NA),
         legend.box= NULL,
-        legend.box.background = element_rect(color="transparent"))
+        legend.box.background = element_rect(color="transparent"))+
+  labs(tag = "(c)")
 
 spa.stab.monthly
 
-ggsave("3-plots/2-2-10-Figure-litterfalll-spatial-variability-monthly-2024-05-16.jpeg", 
+#ggsave("3-plots/2-2-10-Figure-litterfalll-spatial-variability-monthly-2024-05-16.jpeg", 
        spa.stab.monthly, 
        height=16,
        width=34, 
@@ -324,7 +324,7 @@ M = map_df( .x = unique(df.month.spat$month1),
                                         if_else(p.value<0.1, '.', 'n.s.')))))
 M
 
- M$sign[M$explanatory == 'sr' & M$month == 'March'] = 
+M$sign[M$explanatory == 'sr' & M$month == 'March'] = 
   paste0("sr = ",M$sign[M$explanatory == 'sr' & M$month == 'March'])
 M$sign[M$explanatory == 'myc' & M$month == 'March'] = 
   paste0("myc = ",M$sign[M$explanatory == 'myc' & M$month == 'March'])
@@ -361,7 +361,8 @@ temp.stab.yearly <- ggplot()+
                     name = "Mycorrhizal type",
                     guide="none")+ 
   scale_color_manual(values = c("#71b540","#4c8ecb","#febf00"), 
-                     name = "Mycorrhizal type")+
+                     name = "Mycorrhizal type",
+                     guide="none")+
   theme_bw()+
   theme(strip.background = element_blank(),
         strip.text = element_text(size=12),
@@ -385,10 +386,11 @@ temp.stab.yearly <- ggplot()+
         legend.text = element_text(size=12),
         legend.background = element_rect(colour=NA),
         legend.box= NULL,
-        legend.box.background = element_rect(color="transparent"))
+        legend.box.background = element_rect(color="transparent"))+
+  labs(tag = "(a)")
 temp.stab.yearly
 
-ggsave("3-plots/2-2-10-Figure-litterfall-temporal-variability-yearly-2024-05-16.jpeg", 
+#ggsave("3-plots/2-2-10-Figure-litterfall-temporal-variability-yearly-2024-05-16.jpeg", 
        temp.stab.yearly, 
        height=16,
        width=20, 
@@ -418,3 +420,25 @@ anova(mod.yearly.temp.var)
 
 
 ### end ###
+
+library(gridExtra)
+plot2 <-grid.arrange(layout_matrix = rbind(c(1,2),
+                                           c(3,3)),
+                     grobs= list(temp.stab.yearly, spa.stab.yearly, spa.stab.monthly))
+
+plot2
+
+ggsave("3-plots/2-2-10-Figure-spatial-temporal-variability-2024-05-21.jpeg",
+       plot2,
+       height=22,
+       width=24,
+       unit="cm",
+       dpi=2000)
+
+ggsave("3-plots/2-2-10-Figure-spatial-temporal-variability-2024-05-21.pdf",
+       plot2,
+       device = cairo_pdf,
+       height=22,
+       width=24,
+       unit="cm",
+       dpi=2000)

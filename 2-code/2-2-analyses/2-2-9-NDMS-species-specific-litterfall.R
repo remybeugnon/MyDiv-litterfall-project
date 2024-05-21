@@ -80,19 +80,21 @@ tree.species.rel <-
   decostand(plot.by.species, method = "total", na.rm = T)
 
 # 5) Calculating your distance matrix ####
+# Removing rows having all zeros
+tree.species.rel2 <- tree.species.rel[rowSums(tree.species.rel[])>0,]
 
 tree.species.distmat <- 
-  vegdist(plot.species.rel, method = "bray", na.rm = T)    # zero values are problem
+  vegdist(tree.species.rel2, method = "bray", na.rm = T)    # zero values are problem
 
 # 6) Creating easy to view matrix and writing .csv ####
-tree.species.distmat <- 
+tree.species.distmat2 <- 
   as.matrix(tree.species.distmat, labels = T)
 write.csv(tree.species.distmat, "1-data/2-2-9-NDMS-tree-species-distance-matrix.csv")
 
 
 # 7) Running NMDS in vegan (metaMDS) ####                  # zero values & NAs are problem
 tree.species_NMS <-
-  metaMDS(tree.species.distmat,
+  metaMDS(tree.species.distmat2,
           distance = "bray",
           k = 3,
           maxit = 999, 

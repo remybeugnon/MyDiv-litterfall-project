@@ -71,7 +71,7 @@ df.litter.sum = df.all.long |>
 # 4) monthly coverage - sum per plot, if litter dryweight larger then 0 ####
 df.litter.cover = df.litter.sum |>
   group_by(block, plotID, div, sr, myc) |>
-  filter(litterfall > 1) |>
+  filter(litterfall >=10) |>
   summarise(number_month_litterfall = n())
 
 ggplot(df.litter.cover, aes(x=number_month_litterfall, y=div, color=myc, fill=myc))+
@@ -149,15 +149,21 @@ temp.cov <- ggplot(df.litter.cover, aes(y=number_month_litterfall, x=sr, color=m
 
 temp.cov
 
-ggsave("3-plots/2-2-8-Figure-litterfalll-temporal-coverage-2024-05-16.jpeg", 
+ggsave("3-plots/2-2-8-Figure-litterfall-temporal-coverage-10-2024-05-16.jpeg", 
        temp.cov, 
        height=16,
        width=20, 
        unit="cm", 
-       dpi=2000) 
+       dpi=2000)
 
 # 5) Model ####
 #library(nlme)
+
+df.litter.cover = df.litter.sum |>
+  group_by(block, plotID, div, sr, myc) |>
+  filter(litterfall >0) |>
+  summarise(number_month_litterfall = n())
+
 mod.coverage =
   lmerTest::lmer(number_month_litterfall ~ sr * myc + 
                    (1|block),
