@@ -108,6 +108,36 @@ df.monthly.litter = df.all.long |>
 df.monthly.litter$month1 = factor(df.monthly.litter$month1, levels = 
                                 c( month.name[3:12],  month.name[1:2]), labels=month.abb)
 
+M = map_df( .x = unique(df.monthly.litter$month1),
+            .f = ~ {
+              mod = 
+                lme(litter.prod ~ sr * myc, 
+                    random= ~1|block,
+                    data= df.monthly.litter |>
+                      filter(month1 == .x)) |> 
+                anova() |> 
+                data.frame() |> 
+                mutate(month = .x)
+              mod$exp = rownames(mod)
+              rownames(mod) <- NULL
+              mod |> 
+                select(month, explanatory = exp, 
+                       numDF, denDF, F.value, p.value)
+            }) |> 
+  mutate(sign = if_else(p.value < 0.001, '***', 
+                        if_else(p.value < 0.01, "**", 
+                                if_else(p.value < 0.05, '*',
+                                        if_else(p.value<0.1, '.', 'n.s.')))))
+M
+
+M$sign[M$explanatory == 'sr' & M$month == 'March'] = 
+  paste0("sr = ",M$sign[M$explanatory == 'sr' & M$month == 'March'])
+M$sign[M$explanatory == 'myc' & M$month == 'March'] = 
+  paste0("myc = ",M$sign[M$explanatory == 'myc' & M$month == 'March'])
+M$sign[M$explanatory == 'sr:myc' & M$month == 'March'] = 
+  paste0("sr:myc = ",M$sign[M$explanatory == 'sr:myc' & M$month == 'March'])
+
+
 fig.month <- ggplot()+
   geom_point(data = df.monthly.litter, 
              aes(x=sr, y=litter.prod, 
@@ -189,38 +219,7 @@ fig.month
 #        height=16,
 #        width=34, 
 #        unit="cm", 
-#        dpi=2000) 
-
-M = map_df( .x = unique(df.monthly.litter$month1),
-            .f = ~ {
-              mod = 
-                lme(litter.prod ~ sr * myc, 
-                    random= ~1|block,
-                    data= df.monthly.litter |>
-                      filter(month1 == .x)) |> 
-                anova() |> 
-                data.frame() |> 
-                mutate(month = .x)
-              mod$exp = rownames(mod)
-              rownames(mod) <- NULL
-              mod |> 
-                select(month, explanatory = exp, 
-                       numDF, denDF, F.value, p.value)
-            }) |> 
-  mutate(sign = if_else(p.value < 0.001, '***', 
-                        if_else(p.value < 0.01, "**", 
-                                if_else(p.value < 0.05, '*',
-                                        if_else(p.value<0.1, '.', 'n.s.')))))
-M
-
-M$sign[M$explanatory == 'sr' & M$month == 'March'] = 
-  paste0("sr = ",M$sign[M$explanatory == 'sr' & M$month == 'March'])
-M$sign[M$explanatory == 'myc' & M$month == 'March'] = 
-  paste0("myc = ",M$sign[M$explanatory == 'myc' & M$month == 'March'])
-M$sign[M$explanatory == 'sr:myc' & M$month == 'March'] = 
-  paste0("sr:myc = ",M$sign[M$explanatory == 'sr:myc' & M$month == 'March'])
-
-
+#        dpi=2000)
 
 
 ##### cumulative effect ######
@@ -236,6 +235,37 @@ df.cum.litter.1 =
   group_by(block, plotID, div, sr, myc) |> 
   arrange(month1) |> 
   mutate(cs = cumsum(litterfall))
+
+Mc = map_df( .x = unique(df.cum.litter.1$month1),
+             .f = ~ {
+               mod = 
+                 lme(cs ~ sr * myc, 
+                     random= ~1|block,
+                     data= df.cum.litter.1 |>
+                       filter(month1 == .x)) |> 
+                 anova() |> 
+                 data.frame() |> 
+                 mutate(month = .x)
+               mod$exp = rownames(mod)
+               rownames(mod) <- NULL
+               mod |> 
+                 select(month, explanatory = exp, 
+                        numDF, denDF, F.value, p.value)
+             }) |> 
+  mutate(sign = if_else(p.value < 0.001, '***', 
+                        if_else(p.value < 0.01, "**", 
+                                if_else(p.value < 0.05, '*',
+                                        if_else(p.value<0.1, '.', 'n.s.')))))
+Mc
+
+Mc$sign[Mc$explanatory == 'sr' & Mc$month == 'March'] = 
+  paste0("sr = ",Mc$sign[Mc$explanatory == 'sr' & Mc$month == 'March'])
+Mc$sign[Mc$explanatory == 'myc' & M$month == 'March'] = 
+  paste0("myc = ",Mc$sign[Mc$explanatory == 'myc' & Mc$month == 'March'])
+Mc$sign[Mc$explanatory == 'sr:myc' & Mc$month == 'March'] = 
+  paste0("sr:myc = ",Mc$sign[Mc$explanatory == 'sr:myc' & Mc$month == 'March'])
+
+
 
 cum_facet<- ggplot()+
   geom_point(data = df.cum.litter.1, 
@@ -320,35 +350,6 @@ cum_facet
 #        width=34, 
 #        unit="cm", 
 #        dpi=2000) 
-
-Mc = map_df( .x = unique(df.cum.litter.1$month1),
-            .f = ~ {
-              mod = 
-                lme(cs ~ sr * myc, 
-                    random= ~1|block,
-                    data= df.cum.litter.1 |>
-                      filter(month1 == .x)) |> 
-                anova() |> 
-                data.frame() |> 
-                mutate(month = .x)
-              mod$exp = rownames(mod)
-              rownames(mod) <- NULL
-              mod |> 
-                select(month, explanatory = exp, 
-                       numDF, denDF, F.value, p.value)
-            }) |> 
-  mutate(sign = if_else(p.value < 0.001, '***', 
-                        if_else(p.value < 0.01, "**", 
-                                if_else(p.value < 0.05, '*',
-                                        if_else(p.value<0.1, '.', 'n.s.')))))
-Mc
-
-Mc$sign[Mc$explanatory == 'sr' & Mc$month == 'March'] = 
-  paste0("sr = ",Mc$sign[Mc$explanatory == 'sr' & Mc$month == 'March'])
-Mc$sign[Mc$explanatory == 'myc' & M$month == 'March'] = 
-  paste0("myc = ",Mc$sign[Mc$explanatory == 'myc' & Mc$month == 'March'])
-Mc$sign[Mc$explanatory == 'sr:myc' & Mc$month == 'March'] = 
-  paste0("sr:myc = ",Mc$sign[Mc$explanatory == 'sr:myc' & Mc$month == 'March'])
 
 
 library(gridExtra)
