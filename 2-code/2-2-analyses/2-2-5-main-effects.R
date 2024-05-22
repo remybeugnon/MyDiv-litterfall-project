@@ -16,18 +16,9 @@ library(nlme)
 library(lme4)
 library(lmerTest)
 
-library(devtools)
-library(httr)
-library(jsonlite)
-library(XML)
-library(rBExIS)
-load_all("rBExIS")
-bexis.options("base_url" = "https://mydivdata.idiv.de")
-bexis.get.datasets()
-
 #============================ Dataset ===============================
 
-df.all.wide.info <- read_csv("1-data/2-1-data-handling/2-1-1-Full-data-wideformat-MyDiv-litter-dryweight.csv")
+df.all.wide.info <- read_csv("1-data/2-1-data-handling/2-1-1-Full-data-wideformat-MyDiv-litter-dryweight-m2.csv")
 
 # 1) average across traps ####
 df.all.wide.mean <- df.all.wide.info %>%
