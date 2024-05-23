@@ -22,17 +22,6 @@ df.all.wide.info <- read_csv("1-data/2-1-data-handling/2-1-1-Full-data-wideforma
 
 # 1) average across traps ####
 df.all.wide.mean <- df.all.wide.info %>%
-  dplyr::rename(Ac = "Acer pseudoplatanus",	
-                Ae = "Aesculus hippocastanum",
-                Be = "Betula pendula",	
-                Ca = "Carpinus betulus",
-                Fa = "Fagus sylvatica",	
-                Fr = "Fraxinus excelsior",	
-                Pr = "Prunus avium",	
-                Qu = "Quercus petraea", 
-                So = "Sorbus aucuparia",	
-                Ti = "Tilia platyphyllos", 
-                cont = "contaminants") %>%
   dplyr::group_by(plotID, plotName, tree_species_richness, mycorrhizal_type, myc, sr, div, block, blk, month1, month, composition) %>% # removed trap and month
   dplyr::summarise(Ac_mean = mean(Ac, na.rm = TRUE),	
                    Ae_mean = mean(Ae, na.rm = TRUE),
@@ -107,14 +96,14 @@ main.eff <- ggplot(df.annual.litter,
         legend.box.background = element_rect(color="transparent"))
 main.eff
 
-ggsave("3-plots/2-2-5-Figure-yearly-effect-2024-05-07.jpeg", 
+ggsave("3-plots/2-2-5-2-Figure-yearly-effect-2024-05-22.jpeg", 
        main.eff, 
        height=16,
        width=20, 
        unit="cm", 
        dpi=2000) 
 
-ggsave("3-plots/2-2-5-Figure-yearly-effect-sig-2024-05-07.pdf", 
+ggsave("3-plots/2-2-5-2-Figure-yearly-effect-sig-2024-05-22.pdf", 
        main.eff,
        device = cairo_pdf,
        height=16,
@@ -130,7 +119,7 @@ mod.total.litterfall =
 
 # 5) Check the model quality ####
 library(performance)
-png("3-plots/2-2-5-Check-model-main-effects-2024-05-06.png")
+png("3-plots/2-2-5-2-Check-model-main-effects-m2-2024-05-22.png")
 performance::check_model(mod.total.litterfall)
 dev.off()
 

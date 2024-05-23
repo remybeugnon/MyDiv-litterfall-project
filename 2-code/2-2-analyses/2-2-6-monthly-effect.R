@@ -16,24 +16,12 @@ library(nlme)
 library(lme4)
 library(lmerTest)
 
-
 #============================ Dataset ===============================
 
-df.all.wide.info <- read.csv("2-1-1-Full-data-wideformat-MyDiv-litter-dryweight.csv")
+df.all.wide.info <- read.csv("1-data/2-1-data-handling/2-1-1-Full-data-wideformat-MyDiv-litter-dryweight-m2.csv")
 
 # 1) average across traps ####
 df.all.wide.mean <- df.all.wide.info %>%
-  dplyr::rename(Ac = "Acer.pseudoplatanus",	
-                Ae = "Aesculus.hippocastanum",
-                Be = "Betula.pendula",	
-                Ca = "Carpinus.betulus",
-                Fa = "Fagus.sylvatica",	
-                Fr = "Fraxinus.excelsior",	
-                Pr = "Prunus.avium",	
-                Qu = "Quercus.petraea", 
-                So = "Sorbus.aucuparia",	
-                Ti = "Tilia.platyphyllos", 
-                cont = "contaminants") %>%
   dplyr::group_by(plotID, plotName, tree_species_richness, mycorrhizal_type, myc, sr, div, block, blk, month1, month, composition) %>% # removed trap and month
   dplyr::summarise(Ac_mean = mean(Ac, na.rm = TRUE),	
                    Ae_mean = mean(Ae, na.rm = TRUE),
@@ -70,8 +58,38 @@ df.monthly.litter = df.all.long |>
 df.monthly.litter$month1 = factor(df.monthly.litter$month1, levels = 
                      c( month.name[3:12],  month.name[1:2]))
 
+# 4) Check months individually ####
+M = map_df( .x = unique(df.monthly.litter$month1),
+            .f = ~ {
+              mod = 
+                lme(litter.prod ~ sr * myc, 
+                    random= ~1|block,
+                    data= df.monthly.litter |>
+                      filter(month1 == .x)) |> 
+                anova() |> 
+                data.frame() |> 
+                mutate(month = .x)
+              mod$exp = rownames(mod)
+              rownames(mod) <- NULL
+              mod |> 
+                select(month, explanatory = exp, 
+                       numDF, denDF, F.value, p.value)
+            }) |> 
+  mutate(sign = if_else(p.value < 0.001, '***', 
+                        if_else(p.value < 0.01, "**", 
+                                if_else(p.value < 0.05, '*',
+                                        if_else(p.value<0.1, '.', 'n.s.')))))
+M
 
-# 4) plot monthly effects ####
+M$sign[M$explanatory == 'sr' & M$month == 'March'] = 
+  paste0("sr = ",M$sign[M$explanatory == 'sr' & M$month == 'March'])
+M$sign[M$explanatory == 'myc' & M$month == 'March'] = 
+  paste0("myc = ",M$sign[M$explanatory == 'myc' & M$month == 'March'])
+M$sign[M$explanatory == 'sr:myc' & M$month == 'March'] = 
+  paste0("sr:myc = ",M$sign[M$explanatory == 'sr:myc' & M$month == 'March'])
+
+
+# 5) plot monthly effects ####
 fig.month <- ggplot()+
   geom_point(data = df.monthly.litter, 
              aes(x=sr, y=litter.prod, 
@@ -81,7 +99,7 @@ fig.month <- ggplot()+
                   color = myc, fill = myc),
               method="lm", alpha=0.3)+
   facet_grid(.~month1)+
-  labs(y=bquote("Leaf litter dryweight"~(g/m2)), 
+  labs(y=bquote("Leaf litter dryweight"~(g/m^2)), 
        x = "Tree species richness")+
   scale_x_continuous(trans='log2',
                      breaks=c(1,2,4))+
@@ -140,14 +158,16 @@ fig.month <- ggplot()+
         legend.box= NULL,
         legend.box.background = element_rect(color="transparent"))
 
-ggsave("3-plots/2-2-4-Figure-monthly-effects-sig-2024-05-07.jpeg", 
+fig.month
+
+ggsave("3-plots/2-2-6-2-Figure-monthly-effects-sig-m2-2024-05-22.jpeg", 
        fig.month, 
        height=16,
        width=34, 
        unit="cm", 
        dpi=2000) 
 
-ggsave("3-plots/2-2-4-Figure-monthly-effects-sig-2024-05-07.pdf", 
+ggsave("3-plots/2-2-6-2-Figure-monthly-effects-sig-m2-2024-05-22.pdf", 
        fig.month,
        device = cairo_pdf,
        height=16,
@@ -155,7 +175,7 @@ ggsave("3-plots/2-2-4-Figure-monthly-effects-sig-2024-05-07.pdf",
        unit="cm", 
        dpi=2000) 
 
-# 4) Model ####
+# 6) Model ####
 
 # with correlation structure
 #library(nlme)
@@ -165,9 +185,9 @@ mod.monthly.litterfall =
                  data = df.monthly.litter,
                  correlation=corCAR1())
 
-# 5) Check the model quality ####
+# 7) Check the model quality ####
 #library(performance)
-png("3-plots/2-2-6-Check-model-monthly-effects-2024-05-07.png", 
+png("3-plots/2-2-6-2-Check-model-monthly-effects-m2-2024-05-22.png", 
     width=1000, height=1000)
 performance::check_model(mod.monthly.litterfall)
 dev.off()
@@ -175,37 +195,7 @@ dev.off()
 # 6) Summary ####
 summary(mod.monthly.litterfall)
 
-# 7) Anova (Type III SS) ####
+# 8) Anova (Type III SS) ####
 anova(mod.monthly.litterfall)
-
-# 8) Check months individually
-M = map_df( .x = unique(df.monthly.litter$month1),
-     .f = ~ {
-       mod = 
-         lme(litter.prod ~ sr * myc, 
-             random= ~1|block,
-              data= df.monthly.litter |>
-                filter(month1 == .x)) |> 
-         anova() |> 
-         data.frame() |> 
-         mutate(month = .x)
-       mod$exp = rownames(mod)
-       rownames(mod) <- NULL
-       mod |> 
-         select(month, explanatory = exp, 
-                numDF, denDF, F.value, p.value)
-       }) |> 
-  mutate(sign = if_else(p.value < 0.001, '***', 
-                        if_else(p.value < 0.01, "**", 
-                                if_else(p.value < 0.05, '*',
-                                        if_else(p.value<0.1, '.', 'n.s.')))))
-M
-
-M$sign[M$explanatory == 'sr' & M$month == 'March'] = 
-  paste0("sr = ",M$sign[M$explanatory == 'sr' & M$month == 'March'])
-M$sign[M$explanatory == 'myc' & M$month == 'March'] = 
-  paste0("myc = ",M$sign[M$explanatory == 'myc' & M$month == 'March'])
-M$sign[M$explanatory == 'sr:myc' & M$month == 'March'] = 
-  paste0("sr:myc = ",M$sign[M$explanatory == 'sr:myc' & M$month == 'March'])
 
 ### end ###

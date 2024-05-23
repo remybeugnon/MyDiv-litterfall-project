@@ -9,21 +9,10 @@ library(lmerTest)
 
 #============================ Dataset ===============================
 
-df.all.wide.info <- read_csv("1-data/2-1-data-handling/2-1-1-Full-data-wideformat-MyDiv-litter-dryweight.csv")
+df.all.wide.info <- read_csv("1-data/2-1-data-handling/2-1-1-Full-data-wideformat-MyDiv-litter-dryweight-m2.csv")
 
 # 1) average across traps ####
 df.all.wide.mean <- df.all.wide.info %>%
-  dplyr::rename(Ac = "Acer pseudoplatanus",	
-                Ae = "Aesculus hippocastanum",
-                Be = "Betula pendula",	
-                Ca = "Carpinus betulus",
-                Fa = "Fagus sylvatica",	
-                Fr = "Fraxinus excelsior",	
-                Pr = "Prunus avium",	
-                Qu = "Quercus petraea", 
-                So = "Sorbus aucuparia",	
-                Ti = "Tilia platyphyllos", 
-                cont = "contaminants") %>%
   dplyr::group_by(plotID, plotName, tree_species_richness, mycorrhizal_type, myc, sr, div, block, blk, month1, month, composition) %>% # removed trap and month
   dplyr::summarise(Ac_mean = mean(Ac, na.rm = TRUE),	
                    Ae_mean = mean(Ae, na.rm = TRUE),
@@ -73,28 +62,29 @@ main.eff <- ggplot(df.annual.litter,
                      name = "Mycorrhizal type")+
   theme_bw()+
   theme(strip.background = element_blank(),
-        strip.text = element_text(size=12),
-        axis.line = element_line(color='black'),
+        strip.text = element_text(color="black", size = 12),
+        axis.line = element_line(color="black"),
         axis.text.y = element_text(color="black", size = 12),
         axis.text.x = element_text(color="black", size = 12),
-        axis.title.y = element_text(size = 12),
-        axis.title.x = element_text(size=12),
-        axis.ticks.x = element_line(),
-        strip.text.x = element_text(12),
+        axis.title.y = element_text(color="black", size = 12),
+        axis.title.x = element_text(color="black", size = 12),
+        axis.ticks.x = element_line(color="black"),
+        strip.text.x = element_text(color="black", size = 12),
         panel.border = element_rect(colour="black", fill=NA),
         plot.background = element_blank(),
         panel.grid.minor = element_blank(),
         panel.grid.major = element_blank(),
         plot.title = element_text(size =12),
         plot.subtitle = element_text(size=12),
-        legend.position = "top",
-        legend.direction = "horizontal",
+        legend.position.inside =  c(0.75,0.8),
+        legend.direction = "vertical",
         legend.key = element_rect(color="transparent"),   
         legend.title = element_text("Biodiversity effects", size = 12),
         legend.text = element_text(size=12),
         legend.background = element_rect(colour=NA),
         legend.box= NULL,
         legend.box.background = element_rect(color="transparent"))+
+  guides(color= guide_legend(position ="inside"))+
   labs(tag = "(a)")
 main.eff
 
@@ -105,8 +95,23 @@ df.monthly.litter = df.all.long |>
   group_by(block, plotID, sr, div, myc, month1) |> 
   summarise(litter.prod = sum(dryweight, na.rm = T))
 
-df.monthly.litter$month1 = factor(df.monthly.litter$month1, levels = 
-                                c( month.name[3:12],  month.name[1:2]), labels=month.abb)
+
+df.monthly.litter$month2 <- dplyr::recode_factor(df.monthly.litter$month1, 
+                                                 "March"="Mar", 
+                                                 "April"="Apr",
+                                                 "May"="May",
+                                                 "June"="Jun",
+                                                 "July"="Jul",
+                                                 "August"="Aug",
+                                                 "September"="Sep",
+                                                 "October"="Oct",
+                                                 "November"="Nov",
+                                                 "December"="Dec",
+                                                 "January"="Jan",
+                                                 "February"="Feb")
+
+df.monthly.litter$month1 = factor(df.monthly.litter$month2, 
+                                  levels = c(month.abb[3:12], month.abb[1:2]))
 
 M = map_df( .x = unique(df.monthly.litter$month1),
             .f = ~ {
@@ -164,6 +169,7 @@ fig.month <- ggplot()+
             aes(x=1, y=155,
                 label = sign,
                 hjust = 0), 
+            size=3,
             color = 'black') + 
   geom_text(data = M |> 
               mutate(month1 = month) |> 
@@ -171,6 +177,7 @@ fig.month <- ggplot()+
             aes(x=1, y=140,
                 label = sign,
                 hjust = 0), 
+            size=3,
             color = 'black') + 
   geom_text(data = M |> 
               mutate(month1 = month) |> 
@@ -178,17 +185,18 @@ fig.month <- ggplot()+
             aes(x=1, y=130,
                 label = sign,
                 hjust = 0), 
+            size=3,
             color = 'black') + 
   theme_bw()+
   theme(strip.background = element_blank(),
-        strip.text = element_text(size=12),
-        axis.line = element_line(color='black'),
+        strip.text = element_text(color="black", size = 12),
+        axis.line = element_line(color="black"),
         axis.text.y = element_text(color="black", size = 12),
         axis.text.x = element_text(color="black", size = 12),
-        axis.title.y = element_text(size = 12),
-        axis.title.x = element_text(size = 12),
-        axis.ticks.x = element_line(),
-        strip.text.x = element_text(12),
+        axis.title.y = element_text(color="black", size = 12),
+        axis.title.x = element_text(color="black", size = 12),
+        axis.ticks.x = element_line(color="black"),
+        strip.text.x = element_text(color="black", size = 12),
         panel.border = element_rect(colour="black", fill=NA),
         plot.background = element_blank(),
         panel.grid.minor = element_blank(),
@@ -228,8 +236,22 @@ df.cum.litter = df.all.long |>
   group_by(block, plotID, div, sr, myc, month1) |> 
   summarise(litterfall = sum(dryweight, na.rm = T))
 
-df.cum.litter$month1 = factor(df.cum.litter$month1, levels = 
-                                c( month.name[3:12],  month.name[1:2]), labels=month.abb)
+df.cum.litter$month2 <- dplyr::recode_factor(df.cum.litter$month1, 
+                                                 "March"="Mar", 
+                                                 "April"="Apr",
+                                                 "May"="May",
+                                                 "June"="Jun",
+                                                 "July"="Jul",
+                                                 "August"="Aug",
+                                                 "September"="Sep",
+                                                 "October"="Oct",
+                                                 "November"="Nov",
+                                                 "December"="Dec",
+                                                 "January"="Jan",
+                                                 "February"="Feb")
+
+df.cum.litter$month1 = factor(df.cum.litter$month2, 
+                                  levels = c(month.abb[3:12], month.abb[1:2]))
 df.cum.litter.1 = 
   df.cum.litter |> 
   group_by(block, plotID, div, sr, myc) |> 
@@ -265,8 +287,6 @@ Mc$sign[Mc$explanatory == 'myc' & M$month == 'March'] =
 Mc$sign[Mc$explanatory == 'sr:myc' & Mc$month == 'March'] = 
   paste0("sr:myc = ",Mc$sign[Mc$explanatory == 'sr:myc' & Mc$month == 'March'])
 
-
-
 cum_facet<- ggplot()+
   geom_point(data = df.cum.litter.1, 
              aes(x=sr, y=cs, 
@@ -280,7 +300,7 @@ cum_facet<- ggplot()+
        x = "Tree species richness")+
   scale_x_continuous(trans='log2',
                      breaks=c(1,2,4))+
-  scale_y_continuous(limits = c(0, 350))+
+  scale_y_continuous(limits = c(0, 360))+
   #coord_cartesian(ylim = c(0, 140), xlim = c(1,4))+ 
   scale_fill_manual(values= c("#71b540","#4c8ecb","#febf00"),
                     name = "Mycorrhizal type",
@@ -291,34 +311,37 @@ cum_facet<- ggplot()+
   geom_text(data = Mc |> 
               mutate(month1 = month) |> 
               filter(explanatory == 'sr'), 
-            aes(x=1, y=345,
+            aes(x=1, y=355,
                 label = sign,
                 hjust = 0), 
+            size=3,
             color = 'black') + 
   geom_text(data = Mc |> 
               mutate(month1 = month) |> 
               filter(explanatory == 'myc'), 
-            aes(x=1, y=325,
+            aes(x=1, y=330,
                 label = sign,
                 hjust = 0), 
+            size=3,
             color = 'black') + 
   geom_text(data = Mc |> 
               mutate(month1 = month) |> 
               filter(explanatory == 'sr:myc'), 
             aes(x=1, y=305,
                 label = sign,
-                hjust = 0), 
+                hjust = 0),
+            size=3, 
             color = 'black') + 
   theme_bw()+
   theme(strip.background = element_blank(),
-        strip.text = element_text(size=12),
-        axis.line = element_line(color='black'),
+        strip.text = element_text(color="black", size = 12),
+        axis.line = element_line(color="black"),
         axis.text.y = element_text(color="black", size = 12),
         axis.text.x = element_text(color="black", size = 12),
-        axis.title.y = element_text(size = 12),
-        axis.title.x = element_text(size=12),
-        axis.ticks.x = element_line(),
-        strip.text.x = element_text(12),
+        axis.title.y = element_text(color="black", size = 12),
+        axis.title.x = element_text(color="black", size = 12),
+        axis.ticks.x = element_line(color="black"),
+        strip.text.x = element_text(color="black", size = 12),
         panel.border = element_rect(colour="black", fill=NA),
         plot.background = element_blank(),
         panel.grid.minor = element_blank(),
@@ -355,31 +378,31 @@ cum_facet
 library(gridExtra)
 library(ggpubr)
 
-ggarrange(
+plot <- ggarrange(
   main.eff,
   ggarrange(fig.month, cum_facet, ncol = 1),
   nrow = 1, ncol = 2, 
   widths = c(.3,.6)
 )
 
-plot1 <-grid.arrange(layout_matrix = rbind(c(1,2),
-                                           c(1,3)),
-                             grobs= list(main.eff, fig.month, cum_facet))
+# plot1 <-grid.arrange(layout_matrix = rbind(c(1,2),
+#                                            c(1,3)),
+#                              grobs= list(main.eff, fig.month, cum_facet))
+# 
+# plot1
 
-plot1
-
-ggsave("3-plots/2-2-11-Figure-total-monthly-cumulative-2024-05-21.jpeg",
-       plot1,
-       height=28,
-       width=24,
+ggsave("3-plots/2-2-11-2-Figure-total-monthly-cumulative-m2-2024-05-22.jpeg",
+       plot,
+       height=14,
+       width=34,
        unit="cm",
        dpi=2000)
 
-ggsave("3-plots/2-2-11-Figure-total-monthly-cumulative-2024-05-21.pdf",
-       plot1,
+ggsave("3-plots/2-2-11-2-Figure-total-monthly-cumulative-m2-2024-05-22.pdf",
+       plot,
        device = cairo_pdf,
-       height=20,
-       width=34,
+       height=10,
+       width=30,
        unit="cm",
        dpi=2000)
 

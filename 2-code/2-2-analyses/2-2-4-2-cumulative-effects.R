@@ -16,23 +16,12 @@ library(nlme)
 library(lme4)
 library(lmerTest)
 
-df.all.wide.info <- read.csv("2-1-1-Full-data-wideformat-MyDiv-litter-dryweight.csv")
+df.all.wide.info <- read.csv("1-data/2-1-data-handling/2-1-1-Full-data-wideformat-MyDiv-litter-dryweight-m2.csv")
 
 ### (A) all data ####
 
 # 1) average across traps ####
 df.all.wide.mean <- df.all.wide.info %>%
-  dplyr::rename(Ac = "Acer.pseudoplatanus",	
-                Ae = "Aesculus.hippocastanum",
-                Be = "Betula.pendula",	
-                Ca = "Carpinus.betulus",
-                Fa = "Fagus.sylvatica",	
-                Fr = "Fraxinus.excelsior",	
-                Pr = "Prunus.avium",	
-                Qu = "Quercus.petraea", 
-                So = "Sorbus.aucuparia",	
-                Ti = "Tilia.platyphyllos", 
-                cont = "contaminants") %>%
   dplyr::group_by(plotID, plotName, tree_species_richness, mycorrhizal_type, myc, sr, div, block, blk, month1, month, composition) %>% # removed trap and month
   dplyr::summarise(Ac_mean = mean(Ac, na.rm = TRUE),	
                    Ae_mean = mean(Ae, na.rm = TRUE),
@@ -75,11 +64,11 @@ df.cum.litter.1 =
   mutate(cs = cumsum(litterfall))
 
 
-# 4) plot cumulative effects ####
+# 4) plot cumulative effects - line ####
 cum_smooth <- ggplot(data =df.cum.litter.1, aes(x = as.numeric(month1), y = cs, color = factor(myc), fill = factor(myc))) + 
   geom_smooth(alpha=0.2)+
   geom_jitter(shape = 21, alpha=0.5)+
-  labs(y=bquote("Leaf litter dryweight"~(g/m2)), 
+  labs(y=bquote("Leaf litter dryweight"~(g/m^2)), 
        x = "Month")+
   scale_y_continuous(limits = c(0, 310))+
   scale_x_discrete(breaks = 1:12,
@@ -113,6 +102,7 @@ cum_smooth <- ggplot(data =df.cum.litter.1, aes(x = as.numeric(month1), y = cs, 
         legend.background = element_rect(colour=NA),
         legend.box= NULL,
         legend.box.background = element_rect(color="transparent"))
+cum_smooth
 
 #ggsave("3-plots/2-2-4-Figure-cumulative-sum-smooth-sig-2024-05-07.jpeg", 
        cum_smooth, 
@@ -129,7 +119,37 @@ cum_smooth <- ggplot(data =df.cum.litter.1, aes(x = as.numeric(month1), y = cs, 
        unit="cm", 
        dpi=2000) 
 
+# 5) Check months individually ####
+M = map_df( .x = unique(df.cum.litter.1$month1),
+            .f = ~ {
+              mod = 
+                lme(cs ~ sr * myc, 
+                    random= ~1|block,
+                    data= df.cum.litter.1 |>
+                      filter(month1 == .x)) |> 
+                anova() |> 
+                data.frame() |> 
+                mutate(month = .x)
+              mod$exp = rownames(mod)
+              rownames(mod) <- NULL
+              mod |> 
+                select(month, explanatory = exp, 
+                       numDF, denDF, F.value, p.value)
+            }) |> 
+  mutate(sign = if_else(p.value < 0.001, '***', 
+                        if_else(p.value < 0.01, "**", 
+                                if_else(p.value < 0.05, '*',
+                                        if_else(p.value<0.1, '.', 'n.s.')))))
+M
 
+M$sign[M$explanatory == 'sr' & M$month == 'March'] = 
+  paste0("sr = ",M$sign[M$explanatory == 'sr' & M$month == 'March'])
+M$sign[M$explanatory == 'myc' & M$month == 'March'] = 
+  paste0("myc = ",M$sign[M$explanatory == 'myc' & M$month == 'March'])
+M$sign[M$explanatory == 'sr:myc' & M$month == 'March'] = 
+  paste0("sr:myc = ",M$sign[M$explanatory == 'sr:myc' & M$month == 'March'])
+
+# 5) plot cumulative effects - facets
 cum_facet<- ggplot()+
   geom_point(data = df.cum.litter.1, 
              aes(x=sr, y=cs, 
@@ -139,7 +159,7 @@ cum_facet<- ggplot()+
                   color = myc, fill = myc),
               method="lm", alpha=0.3)+
   facet_grid(.~month1)+
-  labs(y=bquote("Cumulative sum - Leaf litter dryweight"~(g/m2)), 
+  labs(y=bquote("Cumulative sum - Leaf litter dryweight"~(g/m^2)), 
        x = "Tree species richness")+
   scale_x_continuous(trans='log2',
                      breaks=c(1,2,4))+
@@ -200,14 +220,14 @@ cum_facet<- ggplot()+
         legend.box.background = element_rect(color="transparent"))
 cum_facet
 
-ggsave("3-plots/2-2-4-2-Figure-cumulative-sum-monthly-sig-2024-05-07.jpeg", 
+ggsave("3-plots/2-2-4-2-2-Figure-cumulative-sum-monthly-sig-m2-2024-05-22.jpeg", 
        cum_facet, 
        height=16,
        width=34, 
        unit="cm", 
        dpi=2000) 
 
-ggsave("3-plots/2-2-4-2-Figure-cumulative-sum-monthly-sig-2024-05-07.pdf", 
+ggsave("3-plots/2-2-4-2-2-Figure-cumulative-sum-monthly-sig-m2-2024-05-22.pdf", 
        cum_facet,
        device = cairo_pdf,
        height=16,
@@ -215,7 +235,7 @@ ggsave("3-plots/2-2-4-2-Figure-cumulative-sum-monthly-sig-2024-05-07.pdf",
        unit="cm", 
        dpi=2000) 
 
-# 5) Model ####
+# 6) Model ####
 
 # with correlation structure
 #library(nlme)
@@ -225,50 +245,18 @@ mod.cum.litter =
       data = df.cum.litter.1,
       correlation=corCAR1())
 
-# 6) Check the model quality ####
+# 7) Check the model quality ####
 #library(performance)
-png("3-plots/2-2-4-2-Check-model-cumulative-sum-effects-2024-05-07.png", 
+png("3-plots/2-2-4-2-2-Check-model-cumulative-sum-effects-m2-2024-05-22.png", 
     width=1000, height=1000)
 performance::check_model(mod.cum.litter)
 dev.off()
 
-# 7) Summary ####
+# 8) Summary ####
 summary(mod.cum.litter)
 
-# 8) Anova (Type III SS) ####
+# 9) Anova (Type III SS) ####
 anova(mod.cum.litter)
-
-# 9) Check months individually ####
-M = map_df( .x = unique(df.cum.litter.1$month1),
-            .f = ~ {
-              mod = 
-                lme(cs ~ sr * myc, 
-                    random= ~1|block,
-                    data= df.cum.litter.1 |>
-                      filter(month1 == .x)) |> 
-                anova() |> 
-                data.frame() |> 
-                mutate(month = .x)
-              mod$exp = rownames(mod)
-              rownames(mod) <- NULL
-              mod |> 
-                select(month, explanatory = exp, 
-                       numDF, denDF, F.value, p.value)
-            }) |> 
-  mutate(sign = if_else(p.value < 0.001, '***', 
-                        if_else(p.value < 0.01, "**", 
-                                if_else(p.value < 0.05, '*',
-                                        if_else(p.value<0.1, '.', 'n.s.')))))
-M
-
-M$sign[M$explanatory == 'sr' & M$month == 'March'] = 
-  paste0("sr = ",M$sign[M$explanatory == 'sr' & M$month == 'March'])
-M$sign[M$explanatory == 'myc' & M$month == 'March'] = 
-  paste0("myc = ",M$sign[M$explanatory == 'myc' & M$month == 'March'])
-M$sign[M$explanatory == 'sr:myc' & M$month == 'March'] = 
-  paste0("sr:myc = ",M$sign[M$explanatory == 'sr:myc' & M$month == 'March'])
-
-
 
 
 ### (B) remove extreme plot 50 (Aesculus monoculture) ####
@@ -285,7 +273,7 @@ cum_facet_no50<- ggplot()+
                   color = myc, fill = myc),
               method="lm", alpha=0.3)+
   facet_grid(.~month1)+
-  labs(y=bquote("Cumulative sum - Leaf litter dryweight"~(g/m2)), 
+  labs(y=bquote("Cumulative sum - Leaf litter dryweight"~(g/m^2)), 
        x = "Tree species richness")+
   scale_x_continuous(trans='log2',
                      breaks=c(1,2,4))+
@@ -346,14 +334,14 @@ cum_facet_no50<- ggplot()+
         legend.box.background = element_rect(color="transparent"))
 cum_facet_no50
 
-ggsave("3-plots/2-2-4-2-Figure-cumulative-sum-monthly-sig-noplot50-2024-05-07.jpeg", 
+ggsave("3-plots/2-2-4-2-2-Figure-cumulative-sum-monthly-sig-noplot50-m2-2024-05-22.jpeg", 
        cum_facet_no50, 
        height=16,
        width=34, 
        unit="cm", 
        dpi=2000) 
 
-ggsave("3-plots/2-2-4-2-Figure-cumulative-sum-monthly-sig-noplot50-2024-05-07.pdf", 
+ggsave("3-plots/2-2-4-2-2-Figure-cumulative-sum-monthly-sig-noplot50-m2-2024-05-22.pdf", 
        cum_facet_no50,
        device = cairo_pdf,
        height=16,
@@ -373,7 +361,7 @@ mod.cum.litter.no50 =
 
 # 6.2) Check the model quality ####
 #library(performance)
-png("3-plots/2-2-4-2-Check-model-cumulative-sum-effects_noplot50-2024-05-07.png", 
+png("3-plots/2-2-4-2-2-Check-model-cumulative-sum-effects_noplot50-m2-2024-05-22.png", 
     width=1000, height=1000)
 performance::check_model(mod.cum.litter.no50)
 dev.off()
