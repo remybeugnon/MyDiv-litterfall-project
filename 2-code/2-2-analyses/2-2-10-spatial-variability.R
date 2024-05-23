@@ -18,21 +18,10 @@ library(lmerTest)
 
 #============================ Dataset ===============================
 
-df.all.wide.info <- read.csv("2-1-1-Full-data-wideformat-MyDiv-litter-dryweight.csv")
+df.all.wide.info <- read.csv("1-data/2-1-data-handling/2-1-1-Full-data-wideformat-MyDiv-litter-dryweight-m2.csv")
 
 # 1) NO! average across traps ####
-df.all.wide.trap <- df.all.wide.info %>%
-  dplyr::rename(Ac = "Acer.pseudoplatanus",	
-                Ae = "Aesculus.hippocastanum",
-                Be = "Betula.pendula",	
-                Ca = "Carpinus.betulus",
-                Fa = "Fagus.sylvatica",	
-                Fr = "Fraxinus.excelsior",	
-                Pr = "Prunus.avium",	
-                Qu = "Quercus.petraea", 
-                So = "Sorbus.aucuparia",	
-                Ti = "Tilia.platyphyllos", 
-                cont = "contaminants")
+df.all.wide.trap <- df.all.wide.info 
 
 df.all.wide.trap$div<-as.factor(df.all.wide.trap$tree_species_richness)
 df.all.wide.trap$blk<-as.factor(df.all.wide.trap$block)
@@ -170,23 +159,23 @@ ggsave("3-plots/2-2-10-Figure-litterfalll-spatial-variability-yearly-noplot50-20
 
 #3.3) Model ####
 #library(nlme)
-mod.yearly.stab.spat =
+mod.yearly.var.spat =
   lmerTest::lmer(log(1/litterfall_sd) ~ sr * myc + 
                    (1|block),
                  data = df.year.spat)
 
 # 3.4) Check the model quality ####
 #library(performance)
-png("3-plots/2-2-10-Check-model-yearly-spatial-variability-2024-05-16.png", 
+png("3-plots/2-2-10-Check-model-yearly-spatial-variability-m2-2024-05-23.png", 
     width=1000, height=1000)
-performance::check_model(mod.yearly.stab.spat)
+performance::check_model(mod.yearly.var.spat)
 dev.off()
 
 # 3.5) Summary ####
-summary(mod.yearly.stab.spat)
+summary(mod.yearly.var.spat)
 
 # 3.6) Anova (Type III SS) ####
-anova(mod.yearly.stab.spat)
+anova(mod.yearly.var.spat)
 
 
 
@@ -335,7 +324,7 @@ M$sign[M$explanatory == 'sr:myc' & M$month == 'March'] =
 
 
 
-#### 5.1) Yearly temporal stability  ####
+#### 5.1) Yearly temporal variability  ####
 df.year.temp = df.all.long |>
   group_by(block, sr, div, myc, plotID, month1) |> 
   summarise(litterfall_mean = mean(litterfall, na.rm=T))|>
@@ -343,8 +332,8 @@ df.year.temp = df.all.long |>
   group_by(block, sr, div, myc, plotID) |> 
   summarise(litterfall_sd = mean(litterfall_mean, na.rm=T)/sd(litterfall_mean, na.rm=T))
 
-# 5.2) Plot: Monthly spatial stability ####
-temp.stab.yearly <- ggplot()+
+# 5.2) Plot: Monthly spatial variability ####
+temp.var.yearly <- ggplot()+
   geom_point(data = df.year.temp , 
              aes(x=sr, y=log(1/litterfall_sd), 
                  color = myc, fill = myc), shape =21, size = 1, alpha=0.5)+
@@ -388,7 +377,7 @@ temp.stab.yearly <- ggplot()+
         legend.box= NULL,
         legend.box.background = element_rect(color="transparent"))+
   labs(tag = "(a)")
-temp.stab.yearly
+temp.var.yearly
 
 #ggsave("3-plots/2-2-10-Figure-litterfall-temporal-variability-yearly-2024-05-16.jpeg", 
        temp.stab.yearly, 
@@ -406,9 +395,9 @@ mod.yearly.temp.var =
 
 # 5.4) Check the model quality ####
 #library(performance)
-png("3-plots/2-2-10-Check-model-yearly-temporal-variability-2024-05-16.png", 
+png("3-plots/2-2-10-Check-model-yearly-temporal-variability-m2-2024-05-23.png", 
     width=1000, height=1000)
-performance::check_model(mod.yearly.stab)
+performance::check_model(mod.yearly.temp.var)
 dev.off()
 
 # 5.5) Summary ####

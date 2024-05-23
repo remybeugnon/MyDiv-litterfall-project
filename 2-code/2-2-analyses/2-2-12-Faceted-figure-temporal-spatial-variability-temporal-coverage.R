@@ -17,21 +17,10 @@ library(lmerTest)
 
 #============================ Dataset ===============================
 
-df.all.wide.info <- read.csv("2-1-1-Full-data-wideformat-MyDiv-litter-dryweight.csv")
+df.all.wide.info <- read.csv("1-data/2-1-data-handling/2-1-1-Full-data-wideformat-MyDiv-litter-dryweight-m2.csv")
 
 # NO! average across traps ####
-df.all.wide.trap <- df.all.wide.info %>%
-  dplyr::rename(Ac = "Acer.pseudoplatanus",	
-                Ae = "Aesculus.hippocastanum",
-                Be = "Betula.pendula",	
-                Ca = "Carpinus.betulus",
-                Fa = "Fagus.sylvatica",	
-                Fr = "Fraxinus.excelsior",	
-                Pr = "Prunus.avium",	
-                Qu = "Quercus.petraea", 
-                So = "Sorbus.aucuparia",	
-                Ti = "Tilia.platyphyllos", 
-                cont = "contaminants")
+df.all.wide.trap <- df.all.wide.info 
 
 df.all.wide.trap$div<-as.factor(df.all.wide.trap$tree_species_richness)
 df.all.wide.trap$blk<-as.factor(df.all.wide.trap$block)
@@ -108,6 +97,24 @@ df.month.spat = df.all.long |>
   group_by(block, sr, div, myc, plotID, month1) |> 
   summarise(litterfall_sd = mean(litterfall, na.rm=T)/sd(litterfall, na.rm=T))|>
   mutate(month1 = factor(month1, levels = c(month.name[3:12], month.name[1:2]),labels=month.abb))
+
+df.month.spat$month2 <- dplyr::recode_factor(df.month.spat$month1, 
+                                                 "March"="Mar", 
+                                                 "April"="Apr",
+                                                 "May"="May",
+                                                 "June"="Jun",
+                                                 "July"="Jul",
+                                                 "August"="Aug",
+                                                 "September"="Sep",
+                                                 "October"="Oct",
+                                                 "November"="Nov",
+                                                 "December"="Dec",
+                                                 "January"="Jan",
+                                                 "February"="Feb")
+
+df.month.spat$month1 = factor(df.month.spat$month2, 
+                                  levels = c(month.abb[3:12], month.abb[1:2]))
+
 
 M = map_df( .x = unique(df.month.spat$month1),
             .f = ~ {
@@ -270,17 +277,6 @@ temp.stab.yearly
 
 # average across traps ####
 df.all.wide.mean <- df.all.wide.info %>%
-  dplyr::rename(Ac = "Acer.pseudoplatanus",	
-                Ae = "Aesculus.hippocastanum",
-                Be = "Betula.pendula",	
-                Ca = "Carpinus.betulus",
-                Fa = "Fagus.sylvatica",	
-                Fr = "Fraxinus.excelsior",	
-                Pr = "Prunus.avium",	
-                Qu = "Quercus.petraea", 
-                So = "Sorbus.aucuparia",	
-                Ti = "Tilia.platyphyllos", 
-                cont = "contaminants") %>%
   dplyr::group_by(plotID, plotName, tree_species_richness, mycorrhizal_type, myc, sr, div, block, blk, month1, month, composition) %>% # removed trap and month
   dplyr::summarise(Ac_mean = mean(Ac, na.rm = TRUE),	
                    Ae_mean = mean(Ae, na.rm = TRUE),

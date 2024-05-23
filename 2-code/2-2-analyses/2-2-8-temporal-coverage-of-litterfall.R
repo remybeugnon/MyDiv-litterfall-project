@@ -18,21 +18,10 @@ library(lmerTest)
 
 #============================ Dataset ===============================
 
-df.all.wide.info <- read.csv("2-1-1-Full-data-wideformat-MyDiv-litter-dryweight.csv")
+df.all.wide.info <- read.csv("1-data/2-1-data-handling/2-1-1-Full-data-wideformat-MyDiv-litter-dryweight-m2.csv")
 
 # 1) average across traps ####
 df.all.wide.mean <- df.all.wide.info %>%
-  dplyr::rename(Ac = "Acer.pseudoplatanus",	
-                Ae = "Aesculus.hippocastanum",
-                Be = "Betula.pendula",	
-                Ca = "Carpinus.betulus",
-                Fa = "Fagus.sylvatica",	
-                Fr = "Fraxinus.excelsior",	
-                Pr = "Prunus.avium",	
-                Qu = "Quercus.petraea", 
-                So = "Sorbus.aucuparia",	
-                Ti = "Tilia.platyphyllos", 
-                cont = "contaminants") %>%
   dplyr::group_by(plotID, plotName, tree_species_richness, mycorrhizal_type, myc, sr, div, block, blk, month1, month, composition) %>% # removed trap and month
   dplyr::summarise(Ac_mean = mean(Ac, na.rm = TRUE),	
                    Ae_mean = mean(Ae, na.rm = TRUE),
@@ -71,7 +60,7 @@ df.litter.sum = df.all.long |>
 # 4) monthly coverage - sum per plot, if litter dryweight larger then 0 ####
 df.litter.cover = df.litter.sum |>
   group_by(block, plotID, div, sr, myc) |>
-  filter(litterfall >=10) |>
+  filter(litterfall >0) |>
   summarise(number_month_litterfall = n())
 
 ggplot(df.litter.cover, aes(x=number_month_litterfall, y=div, color=myc, fill=myc))+
@@ -149,7 +138,7 @@ temp.cov <- ggplot(df.litter.cover, aes(y=number_month_litterfall, x=sr, color=m
 
 temp.cov
 
-ggsave("3-plots/2-2-8-Figure-litterfall-temporal-coverage-10-2024-05-16.jpeg", 
+ggsave("3-plots/2-2-8-Figure-litterfall-temporal-coverage-m2-10-2024-05-23.jpeg", 
        temp.cov, 
        height=16,
        width=20, 
@@ -171,7 +160,7 @@ mod.coverage =
 
 # 6) Check the model quality ####
 #library(performance)
-png("3-plots/2-2-8-Check-model-litterfall-temporal-coverage-2024-05-16.png", 
+png("3-plots/2-2-8-Check-model-litterfall-temporal-coverage-m2-2024-05-23.png", 
     width=1000, height=1000)
 performance::check_model(mod.coverage)
 dev.off()
