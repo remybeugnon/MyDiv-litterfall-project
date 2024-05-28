@@ -142,7 +142,7 @@ spa.stab.monthly <- ggplot()+
   #   #breaks=c(0.1,1,10,100,1000),labels=c(0.1,1,10,100,1000),
   #   )+
   scale_y_continuous(trans='log',
-                     breaks=c(0.1,1,10,100,500), labels=c(0.1,1,10,100,500))+
+                     breaks=c(0.1,1,10,100,1000), labels=c(0.1,1,10,100,500))+
   scale_x_continuous(trans='log2',
                      breaks=c(1,2,4))+
   scale_fill_manual(values= c("#71b540","#4c8ecb","#febf00"),

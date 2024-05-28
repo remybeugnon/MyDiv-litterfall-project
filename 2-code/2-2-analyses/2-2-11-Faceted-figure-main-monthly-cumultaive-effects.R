@@ -391,18 +391,18 @@ plot <- ggarrange(
 # 
 # plot1
 
-ggsave("3-plots/2-2-11-2-Figure-total-monthly-cumulative-m2-2024-05-22.jpeg",
+ggsave("3-plots/2-2-11-Figure-total-monthly-cumulative-m2-2024-05-22.jpeg",
        plot,
        height=14,
        width=34,
        unit="cm",
        dpi=2000)
 
-ggsave("3-plots/2-2-11-2-Figure-total-monthly-cumulative-m2-2024-05-22.pdf",
+ggsave("3-plots/2-2-11-Figure-total-monthly-cumulative-m2-2024-05-22.pdf",
        plot,
        device = cairo_pdf,
-       height=10,
-       width=30,
+       height=14,
+       width=34,
        unit="cm",
        dpi=2000)
 

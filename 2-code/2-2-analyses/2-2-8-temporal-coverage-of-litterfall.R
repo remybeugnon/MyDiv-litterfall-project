@@ -138,7 +138,7 @@ temp.cov <- ggplot(df.litter.cover, aes(y=number_month_litterfall, x=sr, color=m
 
 temp.cov
 
-ggsave("3-plots/2-2-8-Figure-litterfall-temporal-coverage-m2-10-2024-05-23.jpeg", 
+#ggsave("3-plots/2-2-8-Figure-litterfall-temporal-coverage-m2-10-2024-05-23.jpeg", 
        temp.cov, 
        height=16,
        width=20, 
@@ -154,16 +154,16 @@ df.litter.cover = df.litter.sum |>
   summarise(number_month_litterfall = n())
 
 mod.coverage =
-  lmerTest::lmer(number_month_litterfall ~ sr * myc + 
+  lmerTest::lmer(number_month_litterfall ~ log2(sr) * myc + 
                    (1|block),
                  data = df.litter.cover)
 
 # 6) Check the model quality ####
 #library(performance)
-png("3-plots/2-2-8-Check-model-litterfall-temporal-coverage-m2-2024-05-23.png", 
+#png("3-plots/2-2-8-Check-model-litterfall-temporal-coverage-m2-2024-05-23.png", 
     width=1000, height=1000)
 performance::check_model(mod.coverage)
-dev.off()
+#dev.off()
 
 # 7) Summary ####
 summary(mod.coverage)

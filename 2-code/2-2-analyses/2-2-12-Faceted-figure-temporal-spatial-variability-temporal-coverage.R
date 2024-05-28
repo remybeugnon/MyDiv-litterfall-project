@@ -1,7 +1,7 @@
 #---------------------------------------------------------------------
 # MyDiv experiment; Litterfall data March 2023 - February 2024
 # 2024-05-22
-# temporal and spatial variability + temporal coverage of litter fall
+# Facetted figure - temporal and spatial variability + temporal coverage of litter fall
 # by Elisabeth Bönisch (elisabeth.boenisch@idiv.de)
 
 #============================ Packages ===============================
@@ -35,7 +35,7 @@ df.all.long <- df.all.wide.trap %>%
                names_to="species",
                values_to="litterfall")
 
-#### 1 Yearly spatial stability ####
+#### 1 Yearly spatial variability ####
 df.year.spat = df.all.long |>
   group_by(block, sr, div, myc, plotID, month1) |> 
   summarise(litterfall_sd = mean(litterfall, na.rm=T)/sd(litterfall, na.rm=T))|>  # mean between traps and sd between traps
@@ -46,7 +46,7 @@ df.year.spat = df.all.long |>
 # use log and variability (1/stability)
 hist(log(1/df.year.spat$litterfall_sd))
 
-spa.stab.yearly <- ggplot()+
+spa.var.yearly <- ggplot()+
   geom_point(data = df.year.spat , 
              aes(x=sr, y=1/litterfall_sd, 
                  color = myc, fill = myc), shape =21, size = 1, alpha=0.5)+
@@ -90,9 +90,9 @@ spa.stab.yearly <- ggplot()+
         legend.box= NULL,
         legend.box.background = element_rect(color="transparent"))+
   labs(tag = "(c)")
-spa.stab.yearly
+spa.var.yearly
 
-#### 2 Monthly spatial stability ####
+#### 2 Monthly spatial variability ####
 df.month.spat = df.all.long |>
   group_by(block, sr, div, myc, plotID, month1) |> 
   summarise(litterfall_sd = mean(litterfall, na.rm=T)/sd(litterfall, na.rm=T))|>
@@ -146,7 +146,7 @@ M$sign[M$explanatory == 'myc' & M$month == 'March'] =
 M$sign[M$explanatory == 'sr:myc' & M$month == 'March'] = 
   paste0("sr:myc = ",M$sign[M$explanatory == 'sr:myc' & M$month == 'March'])
 
-spa.stab.monthly <- ggplot()+
+spa.var.monthly <- ggplot()+
   geom_point(data = df.month.spat, 
              aes(x=sr, y=1/litterfall_sd, 
                  color = myc, fill = myc), shape =21, size = 1, alpha=0.5)+
@@ -215,10 +215,10 @@ spa.stab.monthly <- ggplot()+
         legend.box.background = element_rect(color="transparent"))+
   labs(tag = "(d)")
 
-spa.stab.monthly
+spa.var.monthly
 
 
-#### 3 Yearly temporal stability  ####
+#### 3 Yearly temporal variability  ####
 df.year.temp = df.all.long |>
   group_by(block, sr, div, myc, plotID, month1) |> 
   summarise(litterfall_mean = mean(litterfall, na.rm=T))|>
@@ -226,7 +226,7 @@ df.year.temp = df.all.long |>
   group_by(block, sr, div, myc, plotID) |> 
   summarise(litterfall_sd = mean(litterfall_mean, na.rm=T)/sd(litterfall_mean, na.rm=T))
 
-temp.stab.yearly <- ggplot()+
+temp.var.yearly <- ggplot()+
   geom_point(data = df.year.temp , 
              aes(x=sr, y=log(1/litterfall_sd), 
                  color = myc, fill = myc), shape =21, size = 1, alpha=0.5)+
@@ -270,7 +270,7 @@ temp.stab.yearly <- ggplot()+
         legend.box= NULL,
         legend.box.background = element_rect(color="transparent"))+
   labs(tag = "(a)")
-temp.stab.yearly
+temp.var.yearly
 
 
 #### 5 temporal coverage ####
@@ -397,7 +397,7 @@ temp.cov
 library(gridExtra)
 plot2 <-grid.arrange(layout_matrix = rbind(c(1,2,3), 
                                            c(4,4,4)),
-                     grobs= list(temp.stab.yearly, temp.cov,spa.stab.yearly, spa.stab.monthly))
+                     grobs= list(temp.var.yearly, temp.cov, spa.var.yearly, spa.var.monthly))
 
 plot2
 

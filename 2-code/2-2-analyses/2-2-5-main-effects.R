@@ -96,14 +96,14 @@ main.eff <- ggplot(df.annual.litter,
         legend.box.background = element_rect(color="transparent"))
 main.eff
 
-ggsave("3-plots/2-2-5-2-Figure-yearly-effect-2024-05-22.jpeg", 
+#ggsave("3-plots/2-2-5-2-Figure-yearly-effect-2024-05-22.jpeg", 
        main.eff, 
        height=16,
        width=20, 
        unit="cm", 
        dpi=2000) 
 
-ggsave("3-plots/2-2-5-2-Figure-yearly-effect-sig-2024-05-22.pdf", 
+#ggsave("3-plots/2-2-5-2-Figure-yearly-effect-sig-2024-05-22.pdf", 
        main.eff,
        device = cairo_pdf,
        height=16,
@@ -113,15 +113,15 @@ ggsave("3-plots/2-2-5-2-Figure-yearly-effect-sig-2024-05-22.pdf",
 
 # 4) Model ####
 mod.total.litterfall =
-  lmerTest::lmer(litter.prod ~ tree_species_richness * myc + 
+  lmerTest::lmer(litter.prod ~ log2(tree_species_richness) * myc + 
                    (1|block),
                  data = df.annual.litter)
 
 # 5) Check the model quality ####
-library(performance)
-png("3-plots/2-2-5-2-Check-model-main-effects-m2-2024-05-22.png")
+#library(performance)
+#png("3-plots/2-2-5-2-Check-model-main-effects-m2-2024-05-22.png")
 performance::check_model(mod.total.litterfall)
-dev.off()
+#dev.off()
 
 # 6) Summary ####
 summary(mod.total.litterfall)
