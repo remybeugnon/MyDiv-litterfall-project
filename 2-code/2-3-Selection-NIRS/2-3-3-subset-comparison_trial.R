@@ -121,8 +121,37 @@ df.large.2 =
               names_from = wl,
               values_from = int) 
 
+df = np.import('1-data/1-2-NIRS/MyDiv_comparison.dx')
+df.3 = 
+  df |> 
+  purrr::map_df(
+    .f = ~{
+      .x$spectra |> 
+        dplyr::mutate(sample = paste0(.x$name, "-",.x$time))
+    }
+  )
+
+df.large.3 = 
+  pivot_wider(df.3, 
+              names_from = wl,
+              values_from = int) 
+
 df.all = bind_rows(df.large |> mutate(sub = 1),
-                   df.large.2|> mutate(sub = 2))
+                   df.large.2|> mutate(sub = 2),
+                   df.large.3|> mutate(sub = 3))
+
+df.all.common = bind_rows(df.large |> 
+                            mutate(sub = 1) |>
+                            mutate(sample = str_sub(sample,1,13)),
+                   df.large.2|> 
+                     mutate(sub = 2) |>
+                     mutate(sample = str_sub(sample,
+                                           1,13)),
+                   df.large.3|> mutate(sub = 3) |>
+                     mutate(sample = str_sub(sample,
+                                           3,15))) |> 
+  filter(sample %in% str_sub(df.large.3$sample,
+                             3,15))
 # Plot all check 
 p.measures = 
   ggplot(df.1 , 
@@ -149,7 +178,7 @@ p.measures.2 =
 p.measures.2
 
 # PCA measure
-pca.nirs = PCA(df.all[,-c(1,189)], 
+pca.nirs = PCA(df.large.3[,-c(1)], 
                scale.unit = T,
                ncp = 10, 
                graph = F)
@@ -167,26 +196,93 @@ p.point.distribution
 # predict subset 2 
 df.pred.sub.2 = 
   predict.PCA(pca.nirs, df.large.2[,-1])$coord
+df.pred.sub.1 = 
+  predict.PCA(pca.nirs, df.large[,-1])$coord
+df.pred.sub.3 = 
+  predict.PCA(pca.nirs, df.large.3[,-1])$coord
 
+df.pred.sub.com = 
+    predict.PCA(pca.nirs, df.all.common[,-1])$coord
 
+ggplot(data = df.pred.sub.com |>
+         data.frame() |> 
+         mutate(name = df.all.common$sample) |> 
+         mutate(sub = factor(df.all.common$sub)), 
+       aes(x = Dim.1, y = Dim.2, color = sub)) + 
+  geom_point()
+
+df.pred.sub.com.w = 
+  df.pred.sub.com |>
+  data.frame() |> 
+  mutate(name = df.all.common$sample) |> 
+  mutate(sub = factor(df.all.common$sub))
+
+df.pred.sub.com.large = 
+  inner_join(df.pred.sub.com.w |>
+               filter(sub == 3) |>
+               select(name, Dim.1, Dim.2, Dim.3),
+             df.pred.sub.com.w |>
+               filter(sub != 3) |>
+               select(sub, name, f.Dim.1 = Dim.1, f.Dim.2 = Dim.2, f.Dim.3 = Dim.3)
+             )
+
+ggplot(data = df.pred.sub.com.w, 
+       aes(x = Dim.1, y = Dim.2, color = sub)) + 
+  # geom_point(data = df.pred.sub.com.w, 
+  #            aes(x = Dim.1, y = Dim.2, color = sub)) + 
+  geom_segment(data = df.pred.sub.com.large, 
+               aes(x = Dim.1, y = Dim.2, 
+                   xend = f.Dim.1, yend = f.Dim.2,
+                   color = sub), 
+               arrow =  arrow(length = unit(0.01, "npc"))) +
+  annotate(geom = 'segment', 
+           xend = df.annotate$x, x = 0,
+           yend = df.annotate$y, y = 0,
+           color = df.annotate$sub, size = 2, 
+           arrow =  arrow(length = unit(0.01, "npc"))) + 
+  theme_bw()
+
+df.annotate = 
+  df.pred.sub.com.large |> 
+  group_by(sub) |> 
+  summarise(x = mean(f.Dim.1 - Dim.1), 
+            y = mean(f.Dim.2 - Dim.2))
 
 # distribution 
 p.point.distribution = 
   ggpubr::ggarrange(
     # Dimention 1 - 2 
     fviz_pca_ind(pca.nirs, geom="point") + 
+      geom_point(data = df.pred.sub.3,
+                 aes(x = Dim.1, y = Dim.2),
+                 color = 'orange', alpha = .5, size = .8) +
       geom_point(data = df.pred.sub.2,
                  aes(x = Dim.1, y = Dim.2),
-                 color = 'red'),
+                 color = 'red', alpha = .5, size = .8) + 
+      geom_point(data = df.pred.sub.1,
+                 aes(x = Dim.1, y = Dim.2),
+                 color = 'blue', alpha = .5, size = .8),
     # Do the same for 1-3 and 2-3
     fviz_pca_ind(pca.nirs, geom="point", axes = c(1,3)) +
+      geom_point(data = df.pred.sub.3,
+                 aes(x = Dim.1, y = Dim.3),
+                 color = 'orange', alpha = .5, size = .5) +
       geom_point(data = df.pred.sub.2,
                  aes(x = Dim.1, y = Dim.3),
-                 color = 'red'), 
+                 color = 'red', alpha = .5, size = .8) +
+      geom_point(data = df.pred.sub.1,
+                 aes(x = Dim.1, y = Dim.3),
+                 color = 'blue', alpha = .5, size = .8), 
     fviz_pca_ind(pca.nirs, geom="point", axes = c(2,3)) +
+      geom_point(data = df.pred.sub.3,
+                 aes(x = Dim.2, y = Dim.3),
+                 color = 'orange', alpha = .5, size = .8) +
       geom_point(data = df.pred.sub.2,
                  aes(x = Dim.2, y = Dim.3),
-                 color = 'red'),
+                 color = 'red', alpha = .5, size = .8) +
+      geom_point(data = df.pred.sub.1,
+                 aes(x = Dim.2, y = Dim.3),
+                 color = 'blue', alpha = .5, size = .8),
     ncol = 3
   )
 
